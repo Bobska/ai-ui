@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - My AI Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        header {
+            background-color: #2d2d2d;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            flex-shrink: 0;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        nav {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        nav a {
+            color: #b0b0b0;
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: color 0.2s;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+        }
+
+        nav a:hover {
+            color: #ffffff;
+            background-color: #3a3a3a;
+        }
+
+        nav a.active {
+            color: #4a9eff;
+            font-weight: 500;
+        }
+
+        /* Main Container */
+        main {
+            flex: 1;
+            max-width: 1000px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Page Title */
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-subtitle {
+            color: #808080;
+            font-size: 0.95rem;
+        }
+
+        /* Settings Card */
+        .settings-card {
+            background-color: #2d2d2d;
+            border: 1px solid #3a3a3a;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            transition: border-color 0.2s;
+        }
+
+        .settings-card:hover {
+            border-color: #4a4a4a;
+        }
+
+        .settings-card h2 {
+            font-size: 1.3rem;
+            margin-bottom: 0.5rem;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .settings-card p {
+            color: #808080;
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Setting Row */
+        .setting-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            border-bottom: 1px solid #3a3a3a;
+        }
+
+        .setting-row:last-child {
+            border-bottom: none;
+        }
+
+        .setting-info {
+            flex: 1;
+        }
+
+        .setting-label {
+            font-size: 1rem;
+            color: #e0e0e0;
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .setting-description {
+            font-size: 0.85rem;
+            color: #808080;
+        }
+
+        .setting-control {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        /* Toggle Switch */
+        .toggle-switch {
+            position: relative;
+            width: 60px;
+            height: 32px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #3a3a3a;
+            transition: 0.3s;
+            border-radius: 32px;
+            border: 2px solid #4a4a4a;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 4px;
+            bottom: 4px;
+            background-color: #808080;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: rgba(74, 158, 255, 0.3);
+            border-color: #4a9eff;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(28px);
+            background-color: #4a9eff;
+        }
+
+        .slider:hover {
+            border-color: #5a5a5a;
+        }
+
+        input:checked + .slider:hover {
+            border-color: #5aa8ff;
+        }
+
+        /* Slider Input */
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            min-width: 250px;
+        }
+
+        .slider-input {
+            flex: 1;
+            height: 6px;
+            border-radius: 3px;
+            background: #3a3a3a;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .slider-input::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #4a9eff;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .slider-input::-webkit-slider-thumb:hover {
+            background: #5aa8ff;
+        }
+
+        .slider-input::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #4a9eff;
+            cursor: pointer;
+            border: none;
+            transition: background 0.2s;
+        }
+
+        .slider-input::-moz-range-thumb:hover {
+            background: #5aa8ff;
+        }
+
+        .slider-value {
+            min-width: 45px;
+            text-align: right;
+            color: #4a9eff;
+            font-weight: 600;
+            font-family: 'Courier New', monospace;
+        }
+
+        /* Text Display */
+        .text-display {
+            padding: 0.75rem 1rem;
+            background-color: #1a1a1a;
+            border: 1px solid #3a3a3a;
+            border-radius: 6px;
+            color: #e0e0e0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95rem;
+        }
+
+        /* Buttons */
+        .btn {
+            background-color: #3a3a3a;
+            color: #e0e0e0;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn:hover {
+            background-color: #4a4a4a;
+        }
+
+        .btn-primary {
+            background-color: #4a9eff;
+            color: #ffffff;
+        }
+
+        .btn-primary:hover {
+            background-color: #3a8eef;
+        }
+
+        .btn:disabled {
+            background-color: #2d2d2d;
+            color: #606060;
+            cursor: not-allowed;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #3a3a3a;
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background-color: #2d2d2d;
+            border: 1px solid #4a4a4a;
+            border-radius: 8px;
+            padding: 1rem 1.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            opacity: 0;
+            transform: translateY(1rem);
+            transition: opacity 0.3s, transform 0.3s;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        .toast.success {
+            border-color: #22c55e;
+        }
+
+        .toast.error {
+            border-color: #ef4444;
+        }
+
+        .toast-icon {
+            font-size: 1.5rem;
+        }
+
+        .toast-message {
+            color: #e0e0e0;
+        }
+
+        /* Info Grid */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .info-item {
+            background-color: #1a1a1a;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #3a3a3a;
+        }
+
+        .info-label {
+            font-size: 0.85rem;
+            color: #808080;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .info-value {
+            font-size: 1rem;
+            color: #e0e0e0;
+            font-family: 'Courier New', monospace;
+            word-wrap: break-word;
+        }
+
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: #808080;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #3a3a3a;
+            border-top-color: #4a9eff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            header {
+                padding: 1rem;
+            }
+
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            nav {
+                gap: 0.5rem;
+                flex-wrap: wrap;
+            }
+
+            main {
+                padding: 1rem;
+            }
+
+            .setting-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .setting-control {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .slider-container {
+                width: 100%;
+            }
+
+            .btn-group {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .toast {
+                left: 1rem;
+                right: 1rem;
+                bottom: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1>My AI Assistant</h1>
+            <nav>
+                <a href="index.html">Chat</a>
+                <a href="memories.html">Memories</a>
+                <a href="debug.html">Debug</a>
+                <a href="settings.html" class="active">Settings</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="page-header">
+            <h2 class="page-title">Settings</h2>
+            <p class="page-subtitle">Configure your AI assistant preferences</p>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="loading">
+            <div class="loading-spinner"></div>
+            <p>Loading settings...</p>
+        </div>
+
+        <!-- Settings Container -->
+        <div id="settingsContainer" style="display: none;">
+            
+            <!-- AI Model Settings -->
+            <div class="settings-card">
+                <h2>🤖 AI Model</h2>
+                <p>Current AI model configuration</p>
+                
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <div class="setting-label">Model Name</div>
+                        <div class="setting-description">The AI model currently in use</div>
+                    </div>
+                    <div class="setting-control">
+                        <div class="text-display" id="modelName">Loading...</div>
+                    </div>
+                </div>
+
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <div class="setting-label">Model Host</div>
+                        <div class="setting-description">Ollama server address</div>
+                    </div>
+                    <div class="setting-control">
+                        <div class="text-display" id="modelHost">Loading...</div>
+                    </div>
+                </div>
+
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <div class="setting-label">Temperature</div>
+                        <div class="setting-description">Controls randomness (0.0 = focused, 1.0 = creative)</div>
+                    </div>
+                    <div class="setting-control">
+                        <div class="slider-container">
+                            <input type="range" class="slider-input" id="temperature" min="0" max="100" value="70" step="1">
+                            <span class="slider-value" id="temperatureValue">0.70</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Learning Settings -->
+            <div class="settings-card">
+                <h2>🧠 Learning & Memory</h2>
+                <p>Control how the AI learns and stores information</p>
+                
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <div class="setting-label">Auto-Learning</div>
+                        <div class="setting-description">Automatically learn from conversations</div>
+                    </div>
+                    <div class="setting-control">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="autoLearning" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <div class="setting-label">Context Retrieval</div>
+                        <div class="setting-description">Use stored memories in responses</div>
+                    </div>
+                    <div class="setting-control">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="contextRetrieval" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-primary" id="saveLearningBtn">
+                        💾 Save Learning Settings
+                    </button>
+                </div>
+            </div>
+
+            <!-- System Information -->
+            <div class="settings-card">
+                <h2>💻 System Information</h2>
+                <p>Hardware and storage information (read-only)</p>
+                
+                <div class="info-grid" id="systemInfo">
+                    <div class="info-item">
+                        <div class="info-label">Total Memories</div>
+                        <div class="info-value" id="totalMemories">Loading...</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Server Status</div>
+                        <div class="info-value" id="serverStatus">Loading...</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">API Endpoint</div>
+                        <div class="info-value" id="apiEndpoint">http://localhost:8000</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Ollama Host</div>
+                        <div class="info-value" id="ollamaHost">Loading...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Danger Zone -->
+            <div class="settings-card" style="border-color: rgba(239, 68, 68, 0.3);">
+                <h2>⚠️ Danger Zone</h2>
+                <p>These actions cannot be undone</p>
+                
+                <div class="btn-group">
+                    <button class="btn" style="background-color: rgba(239, 68, 68, 0.2); color: #ef4444;" id="clearAllMemoriesBtn">
+                        🗑️ Clear All Memories
+                    </button>
+                    <button class="btn" id="resetSettingsBtn">
+                        🔄 Reset to Defaults
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+        <span class="toast-icon" id="toastIcon">✓</span>
+        <span class="toast-message" id="toastMessage">Settings saved successfully!</span>
+    </div>
+
+    <script>
+        // DOM elements
+        const loadingState = document.getElementById('loadingState');
+        const settingsContainer = document.getElementById('settingsContainer');
+        const temperatureSlider = document.getElementById('temperature');
+        const temperatureValue = document.getElementById('temperatureValue');
+        const autoLearningToggle = document.getElementById('autoLearning');
+        const contextRetrievalToggle = document.getElementById('contextRetrieval');
+        const saveLearningBtn = document.getElementById('saveLearningBtn');
+        const clearAllMemoriesBtn = document.getElementById('clearAllMemoriesBtn');
+        const resetSettingsBtn = document.getElementById('resetSettingsBtn');
+
+        // Current config
+        let currentConfig = {};
+
+        // Initialize
+        window.addEventListener('load', function() {
+            loadConfig();
+        });
+
+        // Temperature slider handler
+        temperatureSlider.addEventListener('input', function() {
+            const value = (this.value / 100).toFixed(2);
+            temperatureValue.textContent = value;
+        });
+
+        // Save learning settings
+        saveLearningBtn.addEventListener('click', function() {
+            saveLearningSettings();
+        });
+
+        // Clear all memories
+        clearAllMemoriesBtn.addEventListener('click', function() {
+            clearAllMemories();
+        });
+
+        // Reset settings
+        resetSettingsBtn.addEventListener('click', function() {
+            resetSettings();
+        });
+
+        // Load configuration from API
+        async function loadConfig() {
+            try {
+                const response = await fetch('http://localhost:8000/api/config', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                currentConfig = data;
+                displayConfig(data);
+                
+                // Also load stats for system info
+                loadStats();
+
+            } catch (error) {
+                console.error('Error loading config:', error);
+                // Show settings with defaults if API fails
+                displayConfig({
+                    model_name: 'llama3.1:latest',
+                    model_host: 'http://localhost:11434/',
+                    temperature: 0.7,
+                    auto_learn: true,
+                    context_retrieval: true
+                });
+                loadStats();
+            } finally {
+                loadingState.style.display = 'none';
+                settingsContainer.style.display = 'block';
+            }
+        }
+
+        // Display configuration
+        function displayConfig(config) {
+            // Model settings
+            document.getElementById('modelName').textContent = config.model_name || config.model_info?.name || 'Unknown';
+            document.getElementById('modelHost').textContent = config.model_host || config.model_info?.host || 'Unknown';
+            
+            // Temperature
+            const temp = config.temperature !== undefined ? config.temperature : 0.7;
+            temperatureSlider.value = temp * 100;
+            temperatureValue.textContent = temp.toFixed(2);
+            
+            // Learning settings
+            autoLearningToggle.checked = config.auto_learn !== undefined ? config.auto_learn : true;
+            contextRetrievalToggle.checked = config.context_retrieval !== undefined ? config.context_retrieval : true;
+        }
+
+        // Load system stats
+        async function loadStats() {
+            try {
+                const response = await fetch('http://localhost:8000/api/stats');
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('totalMemories').textContent = data.total_memories || '0';
+                    document.getElementById('serverStatus').textContent = data.model_info?.status || 'Active';
+                    document.getElementById('ollamaHost').textContent = data.model_info?.host || 'Unknown';
+                }
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        // Save learning settings
+        async function saveLearningSettings() {
+            const config = {
+                temperature: parseFloat(temperatureSlider.value / 100),
+                auto_learn: autoLearningToggle.checked,
+                context_retrieval: contextRetrievalToggle.checked
+            };
+
+            saveLearningBtn.disabled = true;
+            saveLearningBtn.textContent = '💾 Saving...';
+
+            try {
+                const response = await fetch('http://localhost:8000/api/config', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(config)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                showToast('Settings saved successfully!', 'success');
+                currentConfig = { ...currentConfig, ...config };
+
+            } catch (error) {
+                console.error('Error saving settings:', error);
+                showToast('Failed to save settings. Using local storage.', 'error');
+                // Save to localStorage as fallback
+                localStorage.setItem('aiSettings', JSON.stringify(config));
+            } finally {
+                saveLearningBtn.disabled = false;
+                saveLearningBtn.textContent = '💾 Save Learning Settings';
+            }
+        }
+
+        // Clear all memories
+        async function clearAllMemories() {
+            if (!confirm('⚠️ WARNING: This will delete ALL memories permanently. Are you sure?')) {
+                return;
+            }
+
+            if (!confirm('This action cannot be undone. Click OK to confirm deletion.')) {
+                return;
+            }
+
+            clearAllMemoriesBtn.disabled = true;
+            clearAllMemoriesBtn.textContent = '🗑️ Clearing...';
+
+            try {
+                const response = await fetch('http://localhost:8000/api/memories', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                showToast('All memories cleared successfully!', 'success');
+                document.getElementById('totalMemories').textContent = '0';
+
+            } catch (error) {
+                console.error('Error clearing memories:', error);
+                showToast('Failed to clear memories', 'error');
+            } finally {
+                clearAllMemoriesBtn.disabled = false;
+                clearAllMemoriesBtn.textContent = '🗑️ Clear All Memories';
+            }
+        }
+
+        // Reset settings to defaults
+        function resetSettings() {
+            if (!confirm('Reset all settings to default values?')) {
+                return;
+            }
+
+            // Reset to defaults
+            temperatureSlider.value = 70;
+            temperatureValue.textContent = '0.70';
+            autoLearningToggle.checked = true;
+            contextRetrievalToggle.checked = true;
+
+            showToast('Settings reset to defaults', 'success');
+        }
+
+        // Show toast notification
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastIcon = document.getElementById('toastIcon');
+            const toastMessage = document.getElementById('toastMessage');
+
+            toastIcon.textContent = type === 'success' ? '✓' : '✗';
+            toastMessage.textContent = message;
+            
+            toast.className = `toast ${type}`;
+            setTimeout(() => toast.classList.add('show'), 100);
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
