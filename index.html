@@ -63,6 +63,60 @@
             font-weight: 500;
         }
 
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        #conversationInfo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background-color: #3a3a3a;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            color: #b0b0b0;
+        }
+
+        #conversationInfo .indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #22c55e;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        #conversationInfo.empty .indicator {
+            background-color: #808080;
+            animation: none;
+        }
+
+        #newConversationBtn {
+            background-color: #4a9eff;
+            color: #ffffff;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        #newConversationBtn:hover {
+            background-color: #3a8eef;
+        }
+
         #clearChat {
             background-color: #3a3a3a;
             color: #e0e0e0;
@@ -329,13 +383,22 @@
 <body>
     <header>
         <h1>My AI Assistant</h1>
-        <nav>
-            <a href="index.html" class="active">Chat</a>
-            <a href="memories.html">Memories</a>
-            <a href="debug.html">Debug</a>
-            <a href="settings.html">Settings</a>
+        <div class="header-controls">
+            <nav>
+                <a href="index.html" class="active">Chat</a>
+                <a href="memories.html">Memories</a>
+                <a href="debug.html">Debug</a>
+                <a href="settings.html">Settings</a>
+            </nav>
+            <div id="conversationInfo" class="empty">
+                <span class="indicator"></span>
+                <span id="conversationCount">No messages</span>
+            </div>
+            <button id="newConversationBtn" title="Start a new conversation (clears history)">
+                🔄 New Conversation
+            </button>
             <button id="clearChat">Clear Chat</button>
-        </nav>
+        </div>
     </header>
 
     <main>
@@ -363,6 +426,56 @@
         const messageInput = document.getElementById('messageInput');
         const sendButton = document.getElementById('sendButton');
         const clearChatButton = document.getElementById('clearChat');
+        const newConversationBtn = document.getElementById('newConversationBtn');
+        const conversationInfo = document.getElementById('conversationInfo');
+        const conversationCount = document.getElementById('conversationCount');
+
+        // Update conversation indicator
+        async function updateConversationInfo() {
+            try {
+                const response = await fetch('http://localhost:8000/api/conversation/history');
+                if (response.ok) {
+                    const data = await response.json();
+                    const count = data.length;
+                    
+                    if (count === 0) {
+                        conversationInfo.classList.add('empty');
+                        conversationCount.textContent = 'No messages';
+                    } else {
+                        conversationInfo.classList.remove('empty');
+                        const turns = Math.floor(count / 2);
+                        conversationCount.textContent = `${count} messages (${turns} ${turns === 1 ? 'turn' : 'turns'})`;
+                    }
+                }
+            } catch (error) {
+                console.error('Error updating conversation info:', error);
+            }
+        }
+
+        // New conversation button
+        newConversationBtn.addEventListener('click', async function() {
+            if (!confirm('Start a new conversation?\n\nThis will clear the conversation history (AI will forget the current chat context).\nThe chat display will remain visible.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:8000/api/conversation/history', {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    updateConversationInfo();
+                    // Show success message in chat
+                    const emptyState = messagesContainer.querySelector('.empty-state');
+                    if (!emptyState) {
+                        displayMessage('🔄 New conversation started. Previous context cleared.', false);
+                    }
+                }
+            } catch (error) {
+                console.error('Error starting new conversation:', error);
+                alert('Failed to start new conversation. Server may be offline.');
+            }
+        });
 
         // Auto-resize textarea
         messageInput.addEventListener('input', function() {
@@ -529,6 +642,9 @@
                     displayMessage('Received response from AI', false);
                 }
 
+                // Update conversation info
+                updateConversationInfo();
+
             } catch (error) {
                 // Remove thinking indicator
                 removeThinking();
@@ -547,9 +663,12 @@
             }
         }
 
-        // Focus input on load
+        // Focus input and update conversation info on load
         window.addEventListener('load', function() {
             messageInput.focus();
+            updateConversationInfo();
+            // Update conversation info every 30 seconds
+            setInterval(updateConversationInfo, 30000);
         });
     </script>
 </body>

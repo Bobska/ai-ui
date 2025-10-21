@@ -647,6 +647,45 @@
                 </div>
             </div>
 
+            <!-- Conversation History Settings -->
+            <div class="settings-card">
+                <h2>💬 Conversation History</h2>
+                <p>Control how the AI maintains conversation context</p>
+                
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <div class="setting-label">History Length</div>
+                        <div class="setting-description">Number of conversation turns to remember (1-50)</div>
+                    </div>
+                    <div class="setting-control">
+                        <div class="slider-container">
+                            <input type="range" class="slider-input" id="historyLength" min="1" max="50" value="10" step="1">
+                            <span class="slider-value" id="historyLengthValue">10 turns</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-grid" style="margin-top: 1rem;">
+                    <div class="info-item">
+                        <div class="info-label">Current History</div>
+                        <div class="info-value" id="currentHistoryLength">Loading...</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Max Messages</div>
+                        <div class="info-value" id="maxHistoryMessages">Loading...</div>
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-primary" id="saveHistoryBtn">
+                        💾 Save History Settings
+                    </button>
+                    <button class="btn" id="clearHistoryBtn" style="background-color: rgba(239, 68, 68, 0.2); color: #ef4444;">
+                        🗑️ Clear Current History
+                    </button>
+                </div>
+            </div>
+
             <!-- Server Information -->
             <div class="settings-card">
                 <h2>�️ Server Information</h2>
@@ -824,6 +863,10 @@
         const serverOfflineWarning = document.getElementById('serverOfflineWarning');
         const environmentSelector = document.getElementById('environmentSelector');
         const restartServerBtn = document.getElementById('restartServerBtn');
+        const historyLengthSlider = document.getElementById('historyLength');
+        const historyLengthValue = document.getElementById('historyLengthValue');
+        const saveHistoryBtn = document.getElementById('saveHistoryBtn');
+        const clearHistoryBtn = document.getElementById('clearHistoryBtn');
 
         // Current config
         let currentConfig = {};
@@ -832,8 +875,10 @@
         // Initialize
         window.addEventListener('load', function() {
             loadConfig();
+            loadConversationHistoryInfo();
             // Auto-refresh server info every 30 seconds
             setInterval(loadServerInfo, 30000);
+            setInterval(loadConversationHistoryInfo, 30000);
         });
 
         // Temperature slider handler
@@ -871,6 +916,71 @@
         // Restart server (with optional environment switch)
         restartServerBtn.addEventListener('click', function() {
             restartServer();
+        });
+
+        // History length slider handler
+        historyLengthSlider.addEventListener('input', function() {
+            const value = this.value;
+            historyLengthValue.textContent = `${value} ${value === '1' ? 'turn' : 'turns'}`;
+        });
+
+        // Save history settings
+        saveHistoryBtn.addEventListener('click', async function() {
+            const length = parseInt(historyLengthSlider.value);
+            
+            saveHistoryBtn.disabled = true;
+            saveHistoryBtn.textContent = '💾 Saving...';
+
+            try {
+                const response = await fetch(`http://localhost:8000/api/conversation/history/length?length=${length}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                if (response.ok) {
+                    showToast(`Conversation history length set to ${length} turns`, 'success');
+                    loadConversationHistoryInfo();
+                } else {
+                    throw new Error('Failed to update history length');
+                }
+            } catch (error) {
+                console.error('Error updating history length:', error);
+                showToast('Failed to update history length', 'error');
+            } finally {
+                saveHistoryBtn.disabled = false;
+                saveHistoryBtn.textContent = '💾 Save History Settings';
+            }
+        });
+
+        // Clear history button
+        clearHistoryBtn.addEventListener('click', async function() {
+            if (!confirm('Clear conversation history?\n\nThe AI will forget the current conversation context.\nThis cannot be undone.')) {
+                return;
+            }
+
+            clearHistoryBtn.disabled = true;
+            clearHistoryBtn.textContent = '🗑️ Clearing...';
+
+            try {
+                const response = await fetch('http://localhost:8000/api/conversation/history', {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    showToast('Conversation history cleared', 'success');
+                    loadConversationHistoryInfo();
+                } else {
+                    throw new Error('Failed to clear history');
+                }
+            } catch (error) {
+                console.error('Error clearing history:', error);
+                showToast('Failed to clear history', 'error');
+            } finally {
+                clearHistoryBtn.disabled = false;
+                clearHistoryBtn.textContent = '🗑️ Clear Current History';
+            }
         });
 
         // Restart server function
@@ -1115,6 +1225,39 @@
                 document.getElementById('serverUptime').textContent = 'N/A';
                 document.getElementById('ollamaHost').textContent = 'Server offline';
                 document.getElementById('ollamaStatus').innerHTML = '<span style="color: #ef4444;">● Server offline</span>';
+            }
+        }
+
+        // Load conversation history info
+        async function loadConversationHistoryInfo() {
+            try {
+                const response = await fetch('http://localhost:8000/api/conversation/history', {
+                    signal: AbortSignal.timeout(5000)
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const currentLength = data.length;
+                    const maxMessages = data.max_length;
+                    const turns = Math.floor(currentLength / 2);
+                    
+                    document.getElementById('currentHistoryLength').textContent = 
+                        `${currentLength} messages (${turns} ${turns === 1 ? 'turn' : 'turns'})`;
+                    document.getElementById('maxHistoryMessages').textContent = `${maxMessages} messages`;
+                    
+                    // Update slider to match current setting
+                    const maxTurns = Math.floor(maxMessages / 2);
+                    if (historyLengthSlider.value != maxTurns) {
+                        historyLengthSlider.value = maxTurns;
+                        historyLengthValue.textContent = `${maxTurns} ${maxTurns === 1 ? 'turn' : 'turns'}`;
+                    }
+                } else {
+                    throw new Error('Failed to load history info');
+                }
+            } catch (error) {
+                console.error('Error loading conversation history info:', error);
+                document.getElementById('currentHistoryLength').textContent = 'Server offline';
+                document.getElementById('maxHistoryMessages').textContent = 'Server offline';
             }
         }
 
