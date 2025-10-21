@@ -572,10 +572,62 @@
                 </div>
             </div>
 
+            <!-- Server Information -->
+            <div class="settings-card">
+                <h2>�️ Server Information</h2>
+                <p>Current server status and configuration</p>
+                
+                <div class="info-grid" id="serverInfo">
+                    <div class="info-item">
+                        <div class="info-label">Server Status</div>
+                        <div class="info-value" id="serverStatus">
+                            <span style="color: #22c55e;">●</span> Loading...
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Environment</div>
+                        <div class="info-value" id="environment">Loading...</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Database Environment</div>
+                        <div class="info-value" id="dbEnvironment">Loading...</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Database Path</div>
+                        <div class="info-value" id="databasePath">Loading...</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Database Type</div>
+                        <div class="info-value" id="databaseType">Loading...</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Server Uptime</div>
+                        <div class="info-value" id="serverUptime">Loading...</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">API Endpoint</div>
+                        <div class="info-value" id="apiEndpoint">http://localhost:8000</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">API Version</div>
+                        <div class="info-value" id="apiVersion">1.0.0</div>
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn" id="refreshServerInfoBtn">
+                        🔄 Refresh Server Info
+                    </button>
+                    <button class="btn btn-primary" id="viewApiDocsBtn">
+                        📖 View API Documentation
+                    </button>
+                </div>
+            </div>
+
             <!-- System Information -->
             <div class="settings-card">
-                <h2>💻 System Information</h2>
-                <p>Hardware and storage information (read-only)</p>
+                <h2>💾 Memory & Storage</h2>
+                <p>Database and memory statistics</p>
                 
                 <div class="info-grid" id="systemInfo">
                     <div class="info-item">
@@ -583,16 +635,51 @@
                         <div class="info-value" id="totalMemories">Loading...</div>
                     </div>
                     <div class="info-item">
-                        <div class="info-label">Server Status</div>
-                        <div class="info-value" id="serverStatus">Loading...</div>
+                        <div class="info-label">User Facts</div>
+                        <div class="info-value" id="userFacts">Loading...</div>
                     </div>
                     <div class="info-item">
-                        <div class="info-label">API Endpoint</div>
-                        <div class="info-value" id="apiEndpoint">http://localhost:8000</div>
+                        <div class="info-label">Preferences</div>
+                        <div class="info-value" id="preferences">Loading...</div>
                     </div>
+                    <div class="info-item">
+                        <div class="info-label">Technical Notes</div>
+                        <div class="info-value" id="technical">Loading...</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Projects</div>
+                        <div class="info-value" id="projects">Loading...</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Goals</div>
+                        <div class="info-value" id="goals">Loading...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ollama Information -->
+            <div class="settings-card">
+                <h2>🤖 Ollama Configuration</h2>
+                <p>AI model server settings</p>
+                
+                <div class="info-grid">
                     <div class="info-item">
                         <div class="info-label">Ollama Host</div>
                         <div class="info-value" id="ollamaHost">Loading...</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Ollama Status</div>
+                        <div class="info-value" id="ollamaStatus">
+                            <span style="color: #22c55e;">●</span> Loading...
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Active Model</div>
+                        <div class="info-value" id="activeModel">Loading...</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Model Status</div>
+                        <div class="info-value" id="modelStatus">Loading...</div>
                     </div>
                 </div>
             </div>
@@ -631,6 +718,8 @@
         const saveLearningBtn = document.getElementById('saveLearningBtn');
         const clearAllMemoriesBtn = document.getElementById('clearAllMemoriesBtn');
         const resetSettingsBtn = document.getElementById('resetSettingsBtn');
+        const refreshServerInfoBtn = document.getElementById('refreshServerInfoBtn');
+        const viewApiDocsBtn = document.getElementById('viewApiDocsBtn');
 
         // Current config
         let currentConfig = {};
@@ -638,6 +727,8 @@
         // Initialize
         window.addEventListener('load', function() {
             loadConfig();
+            // Auto-refresh server info every 30 seconds
+            setInterval(loadServerInfo, 30000);
         });
 
         // Temperature slider handler
@@ -661,6 +752,17 @@
             resetSettings();
         });
 
+        // Refresh server info
+        refreshServerInfoBtn.addEventListener('click', function() {
+            loadServerInfo();
+            loadStats();
+        });
+
+        // View API docs
+        viewApiDocsBtn.addEventListener('click', function() {
+            window.open('http://localhost:8000/docs', '_blank');
+        });
+
         // Load configuration from API
         async function loadConfig() {
             try {
@@ -679,8 +781,9 @@
                 currentConfig = data;
                 displayConfig(data);
                 
-                // Also load stats for system info
+                // Also load stats and server info
                 loadStats();
+                loadServerInfo();
 
             } catch (error) {
                 console.error('Error loading config:', error);
@@ -721,12 +824,94 @@
                 const response = await fetch('http://localhost:8000/api/stats');
                 if (response.ok) {
                     const data = await response.json();
+                    
+                    // Total memories
                     document.getElementById('totalMemories').textContent = data.total_memories || '0';
-                    document.getElementById('serverStatus').textContent = data.model_info?.status || 'Active';
-                    document.getElementById('ollamaHost').textContent = data.model_info?.host || 'Unknown';
+                    
+                    // Memories by type
+                    const byType = data.memories_by_type || {};
+                    document.getElementById('userFacts').textContent = byType.user_facts || '0';
+                    document.getElementById('preferences').textContent = byType.preferences || '0';
+                    document.getElementById('technical').textContent = byType.technical || '0';
+                    document.getElementById('projects').textContent = byType.projects || '0';
+                    document.getElementById('goals').textContent = byType.goals || '0';
+                    
+                    // Model info
+                    if (data.model_info) {
+                        document.getElementById('activeModel').textContent = data.model_info.name || 'Unknown';
+                        document.getElementById('modelStatus').textContent = data.model_info.status || 'Unknown';
+                    }
                 }
             } catch (error) {
                 console.error('Error loading stats:', error);
+                document.getElementById('totalMemories').textContent = 'Error';
+            }
+        }
+
+        // Load server information
+        async function loadServerInfo() {
+            try {
+                const response = await fetch('http://localhost:8000/api/health');
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Server status
+                    const statusEl = document.getElementById('serverStatus');
+                    if (data.status === 'healthy') {
+                        statusEl.innerHTML = '<span style="color: #22c55e;">● Online</span>';
+                    } else {
+                        statusEl.innerHTML = '<span style="color: #ef4444;">● Error</span>';
+                    }
+                    
+                    // Environment info
+                    document.getElementById('environment').textContent = data.environment || 'Unknown';
+                    document.getElementById('dbEnvironment').textContent = data.environment || 'Unknown';
+                    document.getElementById('databasePath').textContent = data.database_path || 'Unknown';
+                    document.getElementById('databaseType').textContent = data.database_type || 'ChromaDB';
+                    
+                    // Uptime
+                    const uptime = formatUptime(data.uptime_seconds || 0);
+                    document.getElementById('serverUptime').textContent = uptime;
+                    
+                    // Ollama info
+                    document.getElementById('ollamaHost').textContent = data.model_name ? 
+                        (data.model_info?.host || 'http://localhost:11434') : 'Unknown';
+                    
+                    const ollamaStatusEl = document.getElementById('ollamaStatus');
+                    if (data.model_name) {
+                        ollamaStatusEl.innerHTML = '<span style="color: #22c55e;">● Connected</span>';
+                    } else {
+                        ollamaStatusEl.innerHTML = '<span style="color: #ef4444;">● Disconnected</span>';
+                    }
+                    
+                } else {
+                    throw new Error('Server not responding');
+                }
+            } catch (error) {
+                console.error('Error loading server info:', error);
+                document.getElementById('serverStatus').innerHTML = '<span style="color: #ef4444;">● Offline</span>';
+                document.getElementById('environment').textContent = 'Unknown';
+                document.getElementById('dbEnvironment').textContent = 'Unknown';
+                document.getElementById('databasePath').textContent = 'Server not responding';
+                document.getElementById('ollamaStatus').innerHTML = '<span style="color: #ef4444;">● Unknown</span>';
+            }
+        }
+
+        // Format uptime in human-readable format
+        function formatUptime(seconds) {
+            const days = Math.floor(seconds / 86400);
+            const hours = Math.floor((seconds % 86400) / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = Math.floor(seconds % 60);
+            
+            if (days > 0) {
+                return `${days}d ${hours}h ${minutes}m`;
+            } else if (hours > 0) {
+                return `${hours}h ${minutes}m ${secs}s`;
+            } else if (minutes > 0) {
+                return `${minutes}m ${secs}s`;
+            } else {
+                return `${secs}s`;
             }
         }
 
