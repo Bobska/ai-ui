@@ -391,6 +391,42 @@
             word-wrap: break-word;
         }
 
+        /* Warning Banner */
+        .warning-banner {
+            background-color: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 8px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 1.5rem;
+            display: none;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .warning-banner.show {
+            display: flex;
+        }
+
+        .warning-icon {
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .warning-content {
+            flex: 1;
+        }
+
+        .warning-title {
+            font-weight: 600;
+            color: #ef4444;
+            margin-bottom: 0.25rem;
+        }
+
+        .warning-message {
+            font-size: 0.9rem;
+            color: #e0e0e0;
+        }
+
         /* Loading State */
         .loading {
             text-align: center;
@@ -484,6 +520,17 @@
         <div class="page-header">
             <h2 class="page-title">Settings</h2>
             <p class="page-subtitle">Configure your AI assistant preferences</p>
+        </div>
+
+        <!-- Server Offline Warning -->
+        <div class="warning-banner" id="serverOfflineWarning">
+            <span class="warning-icon">⚠️</span>
+            <div class="warning-content">
+                <div class="warning-title">Server Offline</div>
+                <div class="warning-message">
+                    The AI server is not running. Start the server with <code style="background: rgba(0,0,0,0.3); padding: 0.2rem 0.5rem; border-radius: 4px;">start_api.bat</code> to view live information and save settings.
+                </div>
+            </div>
         </div>
 
         <!-- Loading State -->
@@ -720,9 +767,11 @@
         const resetSettingsBtn = document.getElementById('resetSettingsBtn');
         const refreshServerInfoBtn = document.getElementById('refreshServerInfoBtn');
         const viewApiDocsBtn = document.getElementById('viewApiDocsBtn');
+        const serverOfflineWarning = document.getElementById('serverOfflineWarning');
 
         // Current config
         let currentConfig = {};
+        let isServerOnline = false;
 
         // Initialize
         window.addEventListener('load', function() {
@@ -770,7 +819,8 @@
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
-                    }
+                    },
+                    signal: AbortSignal.timeout(5000) // 5 second timeout
                 });
 
                 if (!response.ok) {
@@ -780,6 +830,8 @@
                 const data = await response.json();
                 currentConfig = data;
                 displayConfig(data);
+                isServerOnline = true;
+                serverOfflineWarning.classList.remove('show');
                 
                 // Also load stats and server info
                 loadStats();
@@ -787,15 +839,19 @@
 
             } catch (error) {
                 console.error('Error loading config:', error);
-                // Show settings with defaults if API fails
+                isServerOnline = false;
+                serverOfflineWarning.classList.add('show');
+                
+                // Show settings with defaults if API fails (server offline)
                 displayConfig({
-                    model_name: 'llama3.1:latest',
-                    model_host: 'http://localhost:11434/',
+                    model_name: 'Server offline',
+                    model_host: 'Server offline',
                     temperature: 0.7,
                     auto_learn: true,
                     context_retrieval: true
                 });
                 loadStats();
+                loadServerInfo();
             } finally {
                 loadingState.style.display = 'none';
                 settingsContainer.style.display = 'block';
@@ -821,7 +877,9 @@
         // Load system stats
         async function loadStats() {
             try {
-                const response = await fetch('http://localhost:8000/api/stats');
+                const response = await fetch('http://localhost:8000/api/stats', {
+                    signal: AbortSignal.timeout(5000) // 5 second timeout
+                });
                 if (response.ok) {
                     const data = await response.json();
                     
@@ -841,17 +899,30 @@
                         document.getElementById('activeModel').textContent = data.model_info.name || 'Unknown';
                         document.getElementById('modelStatus').textContent = data.model_info.status || 'Unknown';
                     }
+                } else {
+                    throw new Error('Server not responding');
                 }
             } catch (error) {
                 console.error('Error loading stats:', error);
-                document.getElementById('totalMemories').textContent = 'Error';
+                
+                // Set offline state for all stats
+                document.getElementById('totalMemories').textContent = 'Server offline';
+                document.getElementById('userFacts').textContent = 'N/A';
+                document.getElementById('preferences').textContent = 'N/A';
+                document.getElementById('technical').textContent = 'N/A';
+                document.getElementById('projects').textContent = 'N/A';
+                document.getElementById('goals').textContent = 'N/A';
+                document.getElementById('activeModel').textContent = 'Server offline';
+                document.getElementById('modelStatus').textContent = 'N/A';
             }
         }
 
         // Load server information
         async function loadServerInfo() {
             try {
-                const response = await fetch('http://localhost:8000/api/health');
+                const response = await fetch('http://localhost:8000/api/health', {
+                    signal: AbortSignal.timeout(5000) // 5 second timeout
+                });
                 if (response.ok) {
                     const data = await response.json();
                     
@@ -875,7 +946,7 @@
                     
                     // Ollama info
                     document.getElementById('ollamaHost').textContent = data.model_name ? 
-                        (data.model_info?.host || 'http://localhost:11434') : 'Unknown';
+                        (data.model_info?.host || 'http://localhost:11434') : 'Server offline';
                     
                     const ollamaStatusEl = document.getElementById('ollamaStatus');
                     if (data.model_name) {
@@ -889,11 +960,16 @@
                 }
             } catch (error) {
                 console.error('Error loading server info:', error);
+                
+                // Set offline state for all server-dependent fields
                 document.getElementById('serverStatus').innerHTML = '<span style="color: #ef4444;">● Offline</span>';
-                document.getElementById('environment').textContent = 'Unknown';
-                document.getElementById('dbEnvironment').textContent = 'Unknown';
-                document.getElementById('databasePath').textContent = 'Server not responding';
-                document.getElementById('ollamaStatus').innerHTML = '<span style="color: #ef4444;">● Unknown</span>';
+                document.getElementById('environment').textContent = 'Server offline';
+                document.getElementById('dbEnvironment').textContent = 'Server offline';
+                document.getElementById('databasePath').textContent = 'Server offline';
+                document.getElementById('databaseType').textContent = 'Server offline';
+                document.getElementById('serverUptime').textContent = 'N/A';
+                document.getElementById('ollamaHost').textContent = 'Server offline';
+                document.getElementById('ollamaStatus').innerHTML = '<span style="color: #ef4444;">● Server offline</span>';
             }
         }
 
@@ -917,6 +993,11 @@
 
         // Save learning settings
         async function saveLearningSettings() {
+            if (!isServerOnline) {
+                showToast('Cannot save settings - server is offline', 'error');
+                return;
+            }
+
             const config = {
                 temperature: parseFloat(temperatureSlider.value / 100),
                 auto_learn: autoLearningToggle.checked,
@@ -955,6 +1036,11 @@
 
         // Clear all memories
         async function clearAllMemories() {
+            if (!isServerOnline) {
+                showToast('Cannot clear memories - server is offline', 'error');
+                return;
+            }
+
             if (!confirm('⚠️ WARNING: This will delete ALL memories permanently. Are you sure?')) {
                 return;
             }
