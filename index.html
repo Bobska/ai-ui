@@ -234,6 +234,65 @@
             text-align: left;
         }
 
+        /* Feedback buttons */
+        .message-feedback {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .feedback-btn {
+            background: none;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            padding: 0.4rem 0.8rem;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .feedback-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .feedback-btn.active {
+            opacity: 1;
+            border-color: #4a9eff;
+            background-color: rgba(74, 158, 255, 0.1);
+        }
+
+        .feedback-btn.positive.active {
+            border-color: #22c55e;
+            background-color: rgba(34, 197, 94, 0.1);
+        }
+
+        .feedback-btn.negative.active {
+            border-color: #ef4444;
+            background-color: rgba(239, 68, 68, 0.1);
+        }
+
+        .feedback-details-btn {
+            background: none;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            padding: 0.4rem 0.8rem;
+            font-size: 0.85rem;
+            color: #b0b0b0;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-left: auto;
+        }
+
+        .feedback-details-btn:hover {
+            color: #ffffff;
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
         /* Thinking indicator */
         .thinking {
             display: flex;
@@ -430,6 +489,47 @@
         const conversationInfo = document.getElementById('conversationInfo');
         const conversationCount = document.getElementById('conversationCount');
 
+        // Track current conversation/metric IDs for feedback
+        let conversationId = null;
+        let metricId = null;
+
+        // Submit feedback for AI response
+        async function submitFeedback(convId, metId, feedbackType, button) {
+            try {
+                const response = await fetch('http://localhost:8000/api/feedback', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        conversation_id: convId,
+                        metric_id: metId,
+                        feedback_type: feedbackType
+                    })
+                });
+
+                if (response.ok) {
+                    // Mark button as active
+                    button.classList.add('active');
+                    
+                    // Deactivate the other button in the same feedback group
+                    const feedbackDiv = button.parentElement;
+                    const otherButtons = feedbackDiv.querySelectorAll('.feedback-btn');
+                    otherButtons.forEach(btn => {
+                        if (btn !== button) {
+                            btn.classList.remove('active');
+                        }
+                    });
+                    
+                    console.log(`Feedback "${feedbackType}" submitted successfully`);
+                } else {
+                    console.error('Failed to submit feedback');
+                }
+            } catch (error) {
+                console.error('Error submitting feedback:', error);
+            }
+        }
+
         // Update conversation indicator
         async function updateConversationInfo() {
             try {
@@ -539,6 +639,30 @@
             
             messageContent.appendChild(messageText);
             messageContent.appendChild(timestamp);
+            
+            // Add feedback buttons for AI messages
+            if (!isUser && conversationId && metricId) {
+                const feedbackDiv = document.createElement('div');
+                feedbackDiv.className = 'message-feedback';
+                
+                const thumbsUpBtn = document.createElement('button');
+                thumbsUpBtn.className = 'feedback-btn positive';
+                thumbsUpBtn.innerHTML = '👍';
+                thumbsUpBtn.title = 'Good response';
+                thumbsUpBtn.onclick = () => submitFeedback(conversationId, metricId, 'positive', thumbsUpBtn);
+                
+                const thumbsDownBtn = document.createElement('button');
+                thumbsDownBtn.className = 'feedback-btn negative';
+                thumbsDownBtn.innerHTML = '👎';
+                thumbsDownBtn.title = 'Poor response';
+                thumbsDownBtn.onclick = () => submitFeedback(conversationId, metricId, 'negative', thumbsDownBtn);
+                
+                feedbackDiv.appendChild(thumbsUpBtn);
+                feedbackDiv.appendChild(thumbsDownBtn);
+                
+                messageContent.appendChild(feedbackDiv);
+            }
+            
             messageDiv.appendChild(messageContent);
             
             messagesContainer.appendChild(messageDiv);
@@ -632,6 +756,12 @@
                 }
 
                 const data = await response.json();
+                
+                // Store conversation/metric IDs for feedback
+                if (data.conversation_id && data.metric_id) {
+                    conversationId = data.conversation_id;
+                    metricId = data.metric_id;
+                }
                 
                 // Display AI response
                 if (data.response) {
