@@ -492,6 +492,56 @@
         // Track current conversation/metric IDs for feedback
         let conversationId = null;
         let metricId = null;
+        
+        // Chat history storage key
+        const CHAT_STORAGE_KEY = 'ai_chat_history';
+
+        // Load chat history from localStorage
+        function loadChatHistory() {
+            try {
+                const saved = localStorage.getItem(CHAT_STORAGE_KEY);
+                if (saved) {
+                    const messages = JSON.parse(saved);
+                    messages.forEach(msg => {
+                        addMessageToDOM(msg.content, msg.isUser, msg.conversationId, msg.metricId);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading chat history:', error);
+            }
+        }
+
+        // Save chat history to localStorage
+        function saveChatHistory() {
+            try {
+                const messages = [];
+                const messageElements = messagesContainer.querySelectorAll('.message');
+                
+                messageElements.forEach(msgEl => {
+                    if (msgEl.id === 'thinkingIndicator') return; // Skip thinking indicator
+                    
+                    const isUser = msgEl.classList.contains('user');
+                    const textEl = msgEl.querySelector('.message-text');
+                    if (textEl) {
+                        messages.push({
+                            content: textEl.textContent,
+                            isUser: isUser,
+                            conversationId: msgEl.dataset.conversationId || null,
+                            metricId: msgEl.dataset.metricId || null
+                        });
+                    }
+                });
+                
+                localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(messages));
+            } catch (error) {
+                console.error('Error saving chat history:', error);
+            }
+        }
+
+        // Clear chat history
+        function clearChatHistory() {
+            localStorage.removeItem(CHAT_STORAGE_KEY);
+        }
 
         // Submit feedback for AI response
         async function submitFeedback(convId, metId, feedbackType, button) {
@@ -603,6 +653,7 @@
                         <p>Start a conversation by typing a message below</p>
                     </div>
                 `;
+                clearChatHistory(); // Clear localStorage
             }
         });
 
@@ -616,7 +667,7 @@
         }
 
         // Display message in chat
-        function displayMessage(content, isUser) {
+        function addMessageToDOM(content, isUser, convId = null, metId = null) {
             // Remove empty state if it exists
             const emptyState = messagesContainer.querySelector('.empty-state');
             if (emptyState) {
@@ -625,6 +676,10 @@
 
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${isUser ? 'user' : 'ai'}`;
+            
+            // Store IDs in dataset for feedback
+            if (convId) messageDiv.dataset.conversationId = convId;
+            if (metId) messageDiv.dataset.metricId = metId;
             
             const messageContent = document.createElement('div');
             messageContent.className = 'message-content';
@@ -641,7 +696,7 @@
             messageContent.appendChild(timestamp);
             
             // Add feedback buttons for AI messages
-            if (!isUser && conversationId && metricId) {
+            if (!isUser && convId && metId) {
                 const feedbackDiv = document.createElement('div');
                 feedbackDiv.className = 'message-feedback';
                 
@@ -649,13 +704,13 @@
                 thumbsUpBtn.className = 'feedback-btn positive';
                 thumbsUpBtn.innerHTML = '👍';
                 thumbsUpBtn.title = 'Good response';
-                thumbsUpBtn.onclick = () => submitFeedback(conversationId, metricId, 'positive', thumbsUpBtn);
+                thumbsUpBtn.onclick = () => submitFeedback(convId, metId, 'positive', thumbsUpBtn);
                 
                 const thumbsDownBtn = document.createElement('button');
                 thumbsDownBtn.className = 'feedback-btn negative';
                 thumbsDownBtn.innerHTML = '👎';
                 thumbsDownBtn.title = 'Poor response';
-                thumbsDownBtn.onclick = () => submitFeedback(conversationId, metricId, 'negative', thumbsDownBtn);
+                thumbsDownBtn.onclick = () => submitFeedback(convId, metId, 'negative', thumbsDownBtn);
                 
                 feedbackDiv.appendChild(thumbsUpBtn);
                 feedbackDiv.appendChild(thumbsDownBtn);
@@ -668,7 +723,15 @@
             messagesContainer.appendChild(messageDiv);
             scrollToBottom();
             
+            // Save to localStorage
+            saveChatHistory();
+            
             return messageDiv;
+        }
+
+        // Wrapper function for backward compatibility
+        function displayMessage(content, isUser, convId = null, metId = null) {
+            return addMessageToDOM(content, isUser, convId, metId);
         }
 
         // Show thinking indicator
@@ -758,18 +821,23 @@
                 const data = await response.json();
                 
                 // Store conversation/metric IDs for feedback
+                let currentConvId = null;
+                let currentMetId = null;
                 if (data.conversation_id && data.metric_id) {
-                    conversationId = data.conversation_id;
-                    metricId = data.metric_id;
+                    currentConvId = data.conversation_id;
+                    currentMetId = data.metric_id;
+                    // Also update global variables
+                    conversationId = currentConvId;
+                    metricId = currentMetId;
                 }
                 
-                // Display AI response
+                // Display AI response with IDs
                 if (data.response) {
-                    displayMessage(data.response, false);
+                    displayMessage(data.response, false, currentConvId, currentMetId);
                 } else if (data.message) {
-                    displayMessage(data.message, false);
+                    displayMessage(data.message, false, currentConvId, currentMetId);
                 } else {
-                    displayMessage('Received response from AI', false);
+                    displayMessage('Received response from AI', false, currentConvId, currentMetId);
                 }
 
                 // Update conversation info
@@ -795,6 +863,7 @@
 
         // Focus input and update conversation info on load
         window.addEventListener('load', function() {
+            loadChatHistory(); // Load saved messages
             messageInput.focus();
             updateConversationInfo();
             // Update conversation info every 30 seconds
