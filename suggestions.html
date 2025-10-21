@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Suggestions - AI Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background-color: #2d2d2d;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            color: #ffffff;
+        }
+
+        nav {
+            display: flex;
+            gap: 2rem;
+            margin-top: 1rem;
+        }
+
+        nav a {
+            color: #b0b0b0;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        nav a:hover {
+            color: #ffffff;
+            background-color: #3a3a3a;
+        }
+
+        nav a.active {
+            color: #4a9eff;
+            font-weight: 500;
+        }
+
+        main {
+            flex: 1;
+            padding: 2rem;
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-header h2 {
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-header p {
+            color: #b0b0b0;
+            font-size: 0.95rem;
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .filter-group label {
+            color: #b0b0b0;
+            font-size: 0.9rem;
+        }
+
+        select, input[type="text"], button {
+            padding: 0.6rem 1rem;
+            border: 1px solid #444;
+            background-color: #2d2d2d;
+            color: #e0e0e0;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        select:hover, input[type="text"]:hover {
+            border-color: #666;
+        }
+
+        select:focus, input[type="text"]:focus {
+            border-color: #4a9eff;
+        }
+
+        button {
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        button:hover {
+            background-color: #3a3a3a;
+        }
+
+        button.primary {
+            background-color: #4a9eff;
+            border-color: #4a9eff;
+            color: #ffffff;
+        }
+
+        button.primary:hover {
+            background-color: #3a8eef;
+        }
+
+        .stats-bar {
+            display: flex;
+            gap: 2rem;
+            padding: 1.5rem;
+            background-color: #2d2d2d;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+
+        .stat {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .stat-label {
+            color: #b0b0b0;
+            font-size: 0.85rem;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #4a9eff;
+        }
+
+        .suggestions-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .suggestion-card {
+            background-color: #2d2d2d;
+            border: 1px solid #3a3a3a;
+            border-radius: 8px;
+            padding: 1.5rem;
+            transition: all 0.2s;
+        }
+
+        .suggestion-card:hover {
+            border-color: #4a9eff;
+            box-shadow: 0 2px 10px rgba(74, 158, 255, 0.1);
+        }
+
+        .suggestion-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .suggestion-meta {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .category-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .category-performance { background-color: rgba(244, 63, 94, 0.2); color: #f87171; }
+        .category-memory { background-color: rgba(139, 92, 246, 0.2); color: #a78bfa; }
+        .category-prompt { background-color: rgba(59, 130, 246, 0.2); color: #60a5fa; }
+        .category-response_strategy { background-color: rgba(16, 185, 129, 0.2); color: #34d399; }
+        .category-feature_request { background-color: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+        .category-general { background-color: rgba(107, 114, 128, 0.2); color: #9ca3af; }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .status-pending { background-color: rgba(234, 179, 8, 0.2); color: #facc15; }
+        .status-reviewed { background-color: rgba(59, 130, 246, 0.2); color: #60a5fa; }
+        .status-implemented { background-color: rgba(34, 197, 94, 0.2); color: #4ade80; }
+        .status-rejected { background-color: rgba(239, 68, 68, 0.2); color: #f87171; }
+
+        .suggestion-text {
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 0.75rem;
+            color: #e0e0e0;
+        }
+
+        .suggestion-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #808080;
+            font-size: 0.85rem;
+        }
+
+        .suggestion-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .suggestion-actions button {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.85rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #808080;
+        }
+
+        .empty-state h3 {
+            font-size: 1.3rem;
+            margin-bottom: 0.5rem;
+            color: #b0b0b0;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #808080;
+        }
+
+        .add-suggestion-form {
+            background-color: #2d2d2d;
+            border: 1px solid #3a3a3a;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .add-suggestion-form h3 {
+            margin-bottom: 1rem;
+            color: #ffffff;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #b0b0b0;
+            font-size: 0.9rem;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #444;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            resize: vertical;
+            min-height: 100px;
+            outline: none;
+        }
+
+        textarea:focus {
+            border-color: #4a9eff;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🧠 AI Assistant</h1>
+        <nav>
+            <a href="index.html">Chat</a>
+            <a href="memories.html">Memories</a>
+            <a href="suggestions.html" class="active">Suggestions</a>
+            <a href="settings.html">Settings</a>
+        </nav>
+    </header>
+
+    <main>
+        <div class="page-header">
+            <h2>User Improvement Suggestions</h2>
+            <p>Suggestions detected from conversations or manually submitted. The AI uses these to guide self-improvement.</p>
+        </div>
+
+        <div class="add-suggestion-form" id="addForm" style="display: none;">
+            <h3>Submit a Suggestion</h3>
+            <div class="form-group">
+                <label for="suggestionText">Your Suggestion</label>
+                <textarea id="suggestionText" placeholder="Describe how the AI could improve..."></textarea>
+            </div>
+            <div class="form-group">
+                <label for="suggestionCategory">Category</label>
+                <select id="suggestionCategory">
+                    <option value="general">General</option>
+                    <option value="performance">Performance</option>
+                    <option value="memory">Memory</option>
+                    <option value="prompt">Prompt/Instructions</option>
+                    <option value="response_strategy">Response Strategy</option>
+                    <option value="feature_request">Feature Request</option>
+                </select>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+                <button class="primary" onclick="submitSuggestion()">Submit Suggestion</button>
+                <button onclick="toggleAddForm()">Cancel</button>
+            </div>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat">
+                <span class="stat-label">Total</span>
+                <span class="stat-value" id="totalCount">0</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">Pending</span>
+                <span class="stat-value" id="pendingCount">0</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">Reviewed</span>
+                <span class="stat-value" id="reviewedCount">0</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">Implemented</span>
+                <span class="stat-value" id="implementedCount">0</span>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="filter-group">
+                <label for="statusFilter">Status:</label>
+                <select id="statusFilter" onchange="loadSuggestions()">
+                    <option value="">All</option>
+                    <option value="pending" selected>Pending</option>
+                    <option value="reviewed">Reviewed</option>
+                    <option value="implemented">Implemented</option>
+                    <option value="rejected">Rejected</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="categoryFilter">Category:</label>
+                <select id="categoryFilter" onchange="loadSuggestions()">
+                    <option value="">All</option>
+                    <option value="performance">Performance</option>
+                    <option value="memory">Memory</option>
+                    <option value="prompt">Prompt</option>
+                    <option value="response_strategy">Response Strategy</option>
+                    <option value="feature_request">Feature Request</option>
+                    <option value="general">General</option>
+                </select>
+            </div>
+
+            <button class="primary" onclick="toggleAddForm()">➕ Add Suggestion</button>
+            <button onclick="loadSuggestions()">🔄 Refresh</button>
+        </div>
+
+        <div id="suggestionsList" class="suggestions-list">
+            <div class="loading">Loading suggestions...</div>
+        </div>
+    </main>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+
+        // Load suggestions on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            loadSuggestions();
+            loadStats();
+        });
+
+        function toggleAddForm() {
+            const form = document.getElementById('addForm');
+            form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        }
+
+        async function loadStats() {
+            try {
+                // Load counts for each status
+                const statuses = ['pending', 'reviewed', 'implemented'];
+                const counts = {};
+                
+                for (const status of statuses) {
+                    const response = await fetch(`${API_BASE}/api/suggestions/user?status=${status}&limit=1000`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        counts[status] = data.count || 0;
+                    }
+                }
+                
+                // Load total
+                const totalResponse = await fetch(`${API_BASE}/api/suggestions/user?limit=1000`);
+                if (totalResponse.ok) {
+                    const totalData = await totalResponse.json();
+                    counts.total = totalData.count || 0;
+                }
+                
+                // Update UI
+                document.getElementById('totalCount').textContent = counts.total || 0;
+                document.getElementById('pendingCount').textContent = counts.pending || 0;
+                document.getElementById('reviewedCount').textContent = counts.reviewed || 0;
+                document.getElementById('implementedCount').textContent = counts.implemented || 0;
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        async function loadSuggestions() {
+            const container = document.getElementById('suggestionsList');
+            container.innerHTML = '<div class="loading">Loading suggestions...</div>';
+
+            try {
+                const status = document.getElementById('statusFilter').value;
+                const category = document.getElementById('categoryFilter').value;
+                
+                let url = `${API_BASE}/api/suggestions/user?limit=100`;
+                if (status) url += `&status=${status}`;
+                if (category) url += `&category=${category}`;
+
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error('Failed to load suggestions');
+                }
+
+                const data = await response.json();
+                const suggestions = data.suggestions || [];
+
+                if (suggestions.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <h3>No suggestions found</h3>
+                            <p>Try adjusting the filters or add a new suggestion.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = '';
+                suggestions.forEach(suggestion => {
+                    const card = createSuggestionCard(suggestion);
+                    container.appendChild(card);
+                });
+
+            } catch (error) {
+                console.error('Error loading suggestions:', error);
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h3>Error loading suggestions</h3>
+                        <p>Server may be offline. Please try again later.</p>
+                    </div>
+                `;
+            }
+        }
+
+        function createSuggestionCard(suggestion) {
+            const card = document.createElement('div');
+            card.className = 'suggestion-card';
+            
+            const category = suggestion.category || 'general';
+            const status = suggestion.status || 'pending';
+            const text = suggestion.suggestion_text || '';
+            const timestamp = new Date(suggestion.timestamp).toLocaleString();
+            
+            card.innerHTML = `
+                <div class="suggestion-header">
+                    <div class="suggestion-meta">
+                        <span class="category-badge category-${category}">${category.replace('_', ' ')}</span>
+                        <span class="status-badge status-${status}">${status}</span>
+                    </div>
+                </div>
+                <div class="suggestion-text">${escapeHtml(text)}</div>
+                <div class="suggestion-footer">
+                    <span>${timestamp}</span>
+                    <div class="suggestion-actions">
+                        ${status === 'pending' ? `
+                            <button onclick="updateStatus('${suggestion.suggestion_id}', 'reviewed')">Mark Reviewed</button>
+                        ` : ''}
+                        ${status === 'reviewed' ? `
+                            <button onclick="updateStatus('${suggestion.suggestion_id}', 'implemented')">Mark Implemented</button>
+                            <button onclick="updateStatus('${suggestion.suggestion_id}', 'rejected')">Reject</button>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+            
+            return card;
+        }
+
+        async function updateStatus(suggestionId, newStatus) {
+            try {
+                const response = await fetch(`${API_BASE}/api/suggestions/${suggestionId}/status?status=${newStatus}`, {
+                    method: 'PUT'
+                });
+
+                if (response.ok) {
+                    loadSuggestions();
+                    loadStats();
+                } else {
+                    alert('Failed to update status');
+                }
+            } catch (error) {
+                console.error('Error updating status:', error);
+                alert('Error updating status. Server may be offline.');
+            }
+        }
+
+        async function submitSuggestion() {
+            const text = document.getElementById('suggestionText').value.trim();
+            const category = document.getElementById('suggestionCategory').value;
+
+            if (!text) {
+                alert('Please enter a suggestion');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/suggestions/manual`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        suggestion: text,
+                        category: category
+                    })
+                });
+
+                if (response.ok) {
+                    document.getElementById('suggestionText').value = '';
+                    toggleAddForm();
+                    loadSuggestions();
+                    loadStats();
+                } else {
+                    alert('Failed to submit suggestion');
+                }
+            } catch (error) {
+                console.error('Error submitting suggestion:', error);
+                alert('Error submitting suggestion. Server may be offline.');
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>

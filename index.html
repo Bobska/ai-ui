@@ -446,6 +446,7 @@
             <nav>
                 <a href="index.html" class="active">Chat</a>
                 <a href="memories.html">Memories</a>
+                <a href="suggestions.html">Suggestions</a>
                 <a href="debug.html">Debug</a>
                 <a href="settings.html">Settings</a>
             </nav>
@@ -503,7 +504,7 @@
                 if (saved) {
                     const messages = JSON.parse(saved);
                     messages.forEach(msg => {
-                        addMessageToDOM(msg.content, msg.isUser, msg.conversationId, msg.metricId);
+                        addMessageToDOM(msg.content, msg.isUser, msg.conversationId, msg.metricId, msg.feedbackType);
                     });
                 }
             } catch (error) {
@@ -523,11 +524,22 @@
                     const isUser = msgEl.classList.contains('user');
                     const textEl = msgEl.querySelector('.message-text');
                     if (textEl) {
+                        // Get feedback state
+                        let feedbackType = null;
+                        const feedbackDiv = msgEl.querySelector('.message-feedback');
+                        if (feedbackDiv) {
+                            const activeBtn = feedbackDiv.querySelector('.feedback-btn.active');
+                            if (activeBtn) {
+                                feedbackType = activeBtn.classList.contains('positive') ? 'positive' : 'negative';
+                            }
+                        }
+                        
                         messages.push({
                             content: textEl.textContent,
                             isUser: isUser,
                             conversationId: msgEl.dataset.conversationId || null,
-                            metricId: msgEl.dataset.metricId || null
+                            metricId: msgEl.dataset.metricId || null,
+                            feedbackType: feedbackType
                         });
                     }
                 });
@@ -667,7 +679,7 @@
         }
 
         // Display message in chat
-        function addMessageToDOM(content, isUser, convId = null, metId = null) {
+        function addMessageToDOM(content, isUser, convId = null, metId = null, feedbackType = null) {
             // Remove empty state if it exists
             const emptyState = messagesContainer.querySelector('.empty-state');
             if (emptyState) {
@@ -706,11 +718,21 @@
                 thumbsUpBtn.title = 'Good response';
                 thumbsUpBtn.onclick = () => submitFeedback(convId, metId, 'positive', thumbsUpBtn);
                 
+                // Restore feedback state if it exists
+                if (feedbackType === 'positive') {
+                    thumbsUpBtn.classList.add('active');
+                }
+                
                 const thumbsDownBtn = document.createElement('button');
                 thumbsDownBtn.className = 'feedback-btn negative';
                 thumbsDownBtn.innerHTML = '👎';
                 thumbsDownBtn.title = 'Poor response';
                 thumbsDownBtn.onclick = () => submitFeedback(convId, metId, 'negative', thumbsDownBtn);
+                
+                // Restore feedback state if it exists
+                if (feedbackType === 'negative') {
+                    thumbsDownBtn.classList.add('active');
+                }
                 
                 feedbackDiv.appendChild(thumbsUpBtn);
                 feedbackDiv.appendChild(thumbsDownBtn);
