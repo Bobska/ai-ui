@@ -683,24 +683,28 @@
                     html += '<p style="color: #b0b0b0; margin-bottom: 15px;">The AI has analyzed its performance and identified these optimization opportunities:</p>';
                     
                     suggestions.forEach((suggestion, index) => {
-                        // Determine if this requires code changes or can be auto-optimized
-                        const requiresCode = suggestion.type?.includes('code') || 
-                                            suggestion.description?.toLowerCase().includes('implement') ||
-                                            suggestion.description?.toLowerCase().includes('add new') ||
-                                            suggestion.description?.toLowerCase().includes('create') ||
-                                            suggestion.type === 'feature_request';
+                        // Get suggestion text (API returns 'text' field)
+                        const suggestionText = suggestion.text || suggestion.description || 'No suggestion available';
+                        const suggestionType = suggestion.category || suggestion.type || 'general';
                         
-                        const canAutoOptimize = suggestion.type?.includes('prompt') ||
-                                               suggestion.type?.includes('memory') ||
-                                               suggestion.type?.includes('cache') ||
-                                               suggestion.type?.includes('parameter') ||
-                                               suggestion.type === 'prompt_adjustment' ||
-                                               suggestion.type === 'memory_strategy' ||
-                                               suggestion.type === 'parameter_tune';
+                        // Determine if this requires code changes or can be auto-optimized
+                        const requiresCode = suggestionText.toLowerCase().includes('implement') ||
+                                            suggestionText.toLowerCase().includes('add new') ||
+                                            suggestionText.toLowerCase().includes('create') ||
+                                            suggestionText.toLowerCase().includes('develop') ||
+                                            suggestionText.toLowerCase().includes('build');
+                        
+                        const canAutoOptimize = suggestionType === 'prompt' ||
+                                               suggestionType === 'memory' ||
+                                               suggestionType === 'performance' ||
+                                               suggestionType === 'response_strategy' ||
+                                               suggestionText.toLowerCase().includes('cache') ||
+                                               suggestionText.toLowerCase().includes('retrieval') ||
+                                               suggestionText.toLowerCase().includes('parameter');
 
                         html += `<div class="suggestion-item">`;
                         html += `<div class="suggestion-header">`;
-                        html += `<div class="suggestion-title">${index + 1}. ${suggestion.title || suggestion.type || 'Optimization Suggestion'}</div>`;
+                        html += `<div class="suggestion-title">${index + 1}. ${suggestionType.charAt(0).toUpperCase() + suggestionType.slice(1).replace('_', ' ')}</div>`;
                         
                         if (requiresCode) {
                             html += `<span class="suggestion-type code-required">⚙️ Code Required</span>`;
@@ -709,15 +713,14 @@
                         }
                         html += `</div>`;
                         
-                        html += `<div class="suggestion-details">${suggestion.description || 'No description available'}</div>`;
+                        html += `<div class="suggestion-details">${suggestionText}</div>`;
                         
-                        if (suggestion.expected_impact) {
-                            html += `<div class="suggestion-impact">📈 Expected Impact: ${suggestion.expected_impact}</div>`;
+                        // Show priority if available
+                        if (suggestion.priority) {
+                            const priorityColor = suggestion.priority === 'high' ? '#ef4444' : suggestion.priority === 'medium' ? '#f59e0b' : '#22c55e';
+                            html += `<div style="margin-top: 8px; color: ${priorityColor}; font-size: 0.9em;">Priority: ${suggestion.priority.toUpperCase()}</div>`;
                         }
                         
-                        if (suggestion.rationale) {
-                            html += `<div class="suggestion-details" style="margin-top: 8px;"><strong>Rationale:</strong> ${suggestion.rationale}</div>`;
-                        }
                         html += `</div>`;
                     });
                     html += '</div>';
