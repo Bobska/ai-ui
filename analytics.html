@@ -324,6 +324,135 @@
         input:checked + .slider:before {
             transform: translateX(24px);
         }
+
+        /* Self-Analysis Report Styles */
+        .analysis-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #1a1a1a;
+            border-radius: 5px;
+            border-left: 4px solid #4a9eff;
+        }
+
+        .analysis-section h3 {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+            color: #4a9eff;
+        }
+
+        .analysis-section h4 {
+            font-size: 1em;
+            margin-top: 15px;
+            margin-bottom: 8px;
+            color: #ffffff;
+        }
+
+        .analysis-content {
+            color: #b0b0b0;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        .issue-item {
+            padding: 10px;
+            background: #3a3a3a;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            border-left: 3px solid #ef4444;
+        }
+
+        .issue-item.high {
+            border-left-color: #ef4444;
+        }
+
+        .issue-item.medium {
+            border-left-color: #f59e0b;
+        }
+
+        .issue-item.low {
+            border-left-color: #22c55e;
+        }
+
+        .suggestion-item {
+            padding: 12px;
+            background: #2d2d2d;
+            border-radius: 5px;
+            margin-bottom: 12px;
+            border: 1px solid #4a9eff;
+        }
+
+        .suggestion-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .suggestion-title {
+            font-weight: bold;
+            color: #ffffff;
+            font-size: 1.05em;
+        }
+
+        .suggestion-type {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+
+        .suggestion-type.ai-optimizable {
+            background: #22c55e;
+            color: white;
+        }
+
+        .suggestion-type.code-required {
+            background: #ef4444;
+            color: white;
+        }
+
+        .suggestion-details {
+            color: #b0b0b0;
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+
+        .suggestion-impact {
+            font-size: 0.9em;
+            color: #4a9eff;
+            font-style: italic;
+        }
+
+        .phase-status {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            margin-left: 10px;
+            font-weight: bold;
+        }
+
+        .phase-status.complete {
+            background: #22c55e;
+            color: white;
+        }
+
+        .phase-status.in-progress {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .phase-status.pending {
+            background: #6b7280;
+            color: white;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 20px;
+            color: #6b7280;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
@@ -344,6 +473,13 @@
         <div class="card">
             <h2><span class="card-icon">📊</span> Performance Overview</h2>
             <div id="performance-overview" class="loading">Loading...</div>
+        </div>
+
+        <!-- Self-Analysis Report -->
+        <div class="card" style="grid-column: 1 / -1;">
+            <h2><span class="card-icon">🔍</span> AI Self-Analysis Report</h2>
+            <div id="self-analysis-report" class="loading">Loading...</div>
+            <button class="btn btn-primary btn-sm" style="margin-top: 15px;" onclick="refreshSelfAnalysis()">🔄 Run New Analysis</button>
         </div>
 
         <!-- Automation Status -->
@@ -412,6 +548,7 @@
             try {
                 await Promise.all([
                     loadPerformanceOverview(),
+                    loadSelfAnalysisReport(),
                     loadAutomationStatus(),
                     loadSchedulerStatus(),
                     loadRollbackStats(),
@@ -465,6 +602,130 @@
             } catch (error) {
                 document.getElementById('performance-overview').innerHTML = `<div class="error">Failed to load: ${error.message}</div>`;
             }
+        }
+
+        async function loadSelfAnalysisReport() {
+            try {
+                const response = await fetch(`${API_BASE}/optimize/analyze?hours=168`, { method: 'POST' });
+                const data = await response.json();
+
+                if (!data.success || !data.analysis) {
+                    document.getElementById('self-analysis-report').innerHTML = '<div class="no-data">No analysis data available. Click "Run New Analysis" to generate a report.</div>';
+                    return;
+                }
+
+                const analysis = data.analysis.data_analyzed;
+                const suggestions = data.analysis.suggestions || [];
+
+                // Parse AI's narrative analysis
+                let html = '<div class="analysis-section">';
+                html += '<h3>📊 Current State</h3>';
+                html += `<div class="analysis-content">`;
+                html += `<strong>Conversations Analyzed:</strong> ${analysis.total_conversations || 0}<br>`;
+                html += `<strong>Avg Quality Score:</strong> ${(analysis.avg_quality_score || 0).toFixed(2)}/1.0<br>`;
+                html += `<strong>Avg Response Time:</strong> ${(analysis.avg_response_time_ms || 0).toFixed(0)}ms<br>`;
+                html += `<strong>Memory Hit Rate:</strong> ${(analysis.memory_hit_rate || 0).toFixed(1)}%<br>`;
+                html += `<strong>User Satisfaction:</strong> ${(analysis.feedback_positive_ratio * 100 || 0).toFixed(1)}%<br>`;
+                html += `<strong>Trend:</strong> <span class="status ${analysis.trend === 'IMPROVING' ? 'active' : analysis.trend === 'STABLE' ? 'warning' : 'inactive'}">${analysis.trend || 'STABLE'}</span>`;
+                html += '</div></div>';
+
+                // Issues Identified
+                const issues = data.analysis.issues_identified || [];
+                if (issues.length > 0) {
+                    html += '<div class="analysis-section">';
+                    html += '<h3>⚠️ Issues Identified</h3>';
+                    issues.forEach(issue => {
+                        const severity = issue.severity?.toLowerCase() || 'medium';
+                        html += `<div class="issue-item ${severity}">`;
+                        html += `<strong>${issue.issue_type || 'Unknown Issue'}</strong> `;
+                        html += `<span class="status ${severity === 'high' ? 'inactive' : severity === 'medium' ? 'warning' : 'active'}">${issue.severity || 'MEDIUM'}</span><br>`;
+                        html += `<small>${issue.description || 'No description available'}</small>`;
+                        html += '</div>';
+                    });
+                    html += '</div>';
+                }
+
+                // AI-Generated Improvement Suggestions
+                if (suggestions.length > 0) {
+                    html += '<div class="analysis-section">';
+                    html += '<h3>💡 AI\'s Improvement Suggestions</h3>';
+                    html += '<p style="color: #b0b0b0; margin-bottom: 15px;">The AI has analyzed its performance and identified these optimization opportunities:</p>';
+                    
+                    suggestions.forEach((suggestion, index) => {
+                        // Determine if this requires code changes or can be auto-optimized
+                        const requiresCode = suggestion.type?.includes('code') || 
+                                            suggestion.description?.toLowerCase().includes('implement') ||
+                                            suggestion.description?.toLowerCase().includes('add new') ||
+                                            suggestion.description?.toLowerCase().includes('create') ||
+                                            suggestion.type === 'feature_request';
+                        
+                        const canAutoOptimize = suggestion.type?.includes('prompt') ||
+                                               suggestion.type?.includes('memory') ||
+                                               suggestion.type?.includes('cache') ||
+                                               suggestion.type?.includes('parameter') ||
+                                               suggestion.type === 'prompt_adjustment' ||
+                                               suggestion.type === 'memory_strategy' ||
+                                               suggestion.type === 'parameter_tune';
+
+                        html += `<div class="suggestion-item">`;
+                        html += `<div class="suggestion-header">`;
+                        html += `<div class="suggestion-title">${index + 1}. ${suggestion.title || suggestion.type || 'Optimization Suggestion'}</div>`;
+                        
+                        if (requiresCode) {
+                            html += `<span class="suggestion-type code-required">⚙️ Code Required</span>`;
+                        } else if (canAutoOptimize) {
+                            html += `<span class="suggestion-type ai-optimizable">🤖 AI Can Auto-Optimize</span>`;
+                        }
+                        html += `</div>`;
+                        
+                        html += `<div class="suggestion-details">${suggestion.description || 'No description available'}</div>`;
+                        
+                        if (suggestion.expected_impact) {
+                            html += `<div class="suggestion-impact">📈 Expected Impact: ${suggestion.expected_impact}</div>`;
+                        }
+                        
+                        if (suggestion.rationale) {
+                            html += `<div class="suggestion-details" style="margin-top: 8px;"><strong>Rationale:</strong> ${suggestion.rationale}</div>`;
+                        }
+                        html += `</div>`;
+                    });
+                    html += '</div>';
+                }
+
+                // Implementation Status (Phase tracking)
+                html += '<div class="analysis-section">';
+                html += '<h3>🚀 Implementation Status</h3>';
+                html += '<h4>Phase 1: Safe Self-Optimization</h4>';
+                html += '<div class="analysis-content">';
+                html += '✅ Phase 1.1: Performance Tracking <span class="phase-status complete">COMPLETE</span><br>';
+                html += '✅ Phase 1.2: Self-Analysis Engine <span class="phase-status complete">COMPLETE</span><br>';
+                html += '✅ Phase 1.3: Prompt Optimization <span class="phase-status complete">COMPLETE</span> <small>(AI can auto-optimize prompts)</small><br>';
+                html += '✅ Phase 1.4: Memory Strategy Learning <span class="phase-status complete">COMPLETE</span> <small>(AI can auto-tune retrieval)</small><br>';
+                html += '✅ Phase 1.5: Response Time Optimization <span class="phase-status complete">COMPLETE</span> <small>(AI can auto-adjust cache)</small><br>';
+                html += '✅ Phase 1.6: Automation & Continuous Learning <span class="phase-status complete">COMPLETE</span> <small>(AI can self-improve 24/7)</small><br>';
+                html += '</div>';
+                
+                html += '<h4 style="margin-top: 15px;">When Code Modifications Are Needed:</h4>';
+                html += '<div class="analysis-content">';
+                html += '🔧 <strong>New Features:</strong> Adding capabilities the AI doesn\'t have (e.g., image generation, web scraping)<br>';
+                html += '🔧 <strong>Architecture Changes:</strong> Modifying core systems, adding new modules, changing data structures<br>';
+                html += '🔧 <strong>Integration:</strong> Connecting to external APIs, databases, or services<br>';
+                html += '🔧 <strong>Performance Bottlenecks:</strong> Algorithmic improvements, code optimization, system architecture<br><br>';
+                html += '🤖 <strong>AI Can Self-Optimize:</strong> Prompts, memory retrieval parameters, caching strategies, conversation flow, response formatting<br>';
+                html += '🤖 <strong>Automatic Improvements:</strong> Enable "Auto-Apply" above to let AI continuously optimize itself based on performance data';
+                html += '</div>';
+                html += '</div>';
+
+                document.getElementById('self-analysis-report').innerHTML = html;
+            } catch (error) {
+                console.error('Self-analysis error:', error);
+                document.getElementById('self-analysis-report').innerHTML = `<div class="error">Failed to load analysis: ${error.message}</div>`;
+            }
+        }
+
+        async function refreshSelfAnalysis() {
+            document.getElementById('self-analysis-report').innerHTML = '<div class="loading">Running analysis...</div>';
+            await loadSelfAnalysisReport();
         }
 
         async function loadAutomationStatus() {
