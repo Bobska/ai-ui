@@ -501,12 +501,14 @@
         </div>
 
         <!-- Optimizers -->
+        <div id="optimization-feedback" style="margin-bottom: 20px;"></div>
+        
         <div class="dashboard-grid">
             <div class="card">
                 <h2><span class="card-icon">💬</span> Prompt Optimizer</h2>
                 <div id="prompt-optimizer">
                     <div class="chart-placeholder">Prompt performance chart</div>
-                    <button class="btn btn-primary btn-sm" style="margin-top: 15px;" onclick="triggerOptimization('prompt')">Optimize Now</button>
+                    <button class="btn btn-primary btn-sm" style="margin-top: 15px;" onclick="triggerOptimization('prompt')">🎯 Optimize Now</button>
                 </div>
             </div>
 
@@ -514,7 +516,7 @@
                 <h2><span class="card-icon">🧠</span> Memory Optimizer</h2>
                 <div id="memory-optimizer">
                     <div class="chart-placeholder">Memory hit rate chart</div>
-                    <button class="btn btn-primary btn-sm" style="margin-top: 15px;" onclick="triggerOptimization('memory')">Optimize Now</button>
+                    <button class="btn btn-primary btn-sm" style="margin-top: 15px;" onclick="triggerOptimization('memory')">🧠 Optimize Now</button>
                 </div>
             </div>
 
@@ -522,7 +524,7 @@
                 <h2><span class="card-icon">⚡</span> Response Time Optimizer</h2>
                 <div id="response-time-optimizer">
                     <div class="chart-placeholder">Response time trend chart</div>
-                    <button class="btn btn-primary btn-sm" style="margin-top: 15px;" onclick="triggerOptimization('response-time')">Optimize Now</button>
+                    <button class="btn btn-primary btn-sm" style="margin-top: 15px;" onclick="triggerOptimization('response-time')">⚡ Optimize Now</button>
                 </div>
             </div>
         </div>
@@ -1008,21 +1010,85 @@
             };
 
             try {
-                showSuccess(`Running ${type} optimization...`);
+                showSuccess(`🔄 Running ${type} optimization...`);
                 const response = await fetch(`${API_BASE}/automation/run/${endpoints[type]}`, {
                     method: 'POST'
                 });
 
                 const data = await response.json();
-                if (data.success) {
-                    showSuccess(`${type} optimization completed!`);
+                
+                if (data.success && data.result) {
+                    const result = data.result;
+                    
+                    if (result.action === 'none') {
+                        showSuccess(`✅ ${type} optimization complete: ${result.reason || 'No optimizations needed'}`);
+                    } else if (result.action === 'manual_review_required') {
+                        const changes = result.suggestions?.changes?.length || 0;
+                        showSuccess(`✅ ${type} optimization complete: ${changes} suggestions found - Review in Automation section below`);
+                        
+                        // Show modal with suggestions
+                        showOptimizationResults(type, result);
+                    } else if (result.action === 'auto_applied') {
+                        showSuccess(`✅ ${type} optimization auto-applied! Snapshot: ${result.snapshot_id}`);
+                    } else {
+                        showSuccess(`✅ ${type} optimization complete: ${result.action}`);
+                    }
+                    
                     await loadDashboard();
                 } else {
-                    showError(`Optimization failed: ${JSON.stringify(data.result)}`);
+                    showError(`❌ Optimization failed: ${JSON.stringify(data.result || data)}`);
                 }
             } catch (error) {
-                showError('Failed to run optimization: ' + error.message);
+                showError('❌ Failed to run optimization: ' + error.message);
             }
+        }
+
+        function showOptimizationResults(type, result) {
+            const suggestions = result.suggestions;
+            let message = `<div style="max-width: 600px; text-align: left;">`;
+            message += `<h3 style="margin-top: 0;">${type.toUpperCase()} Optimization Results</h3>`;
+            
+            if (suggestions.changes && suggestions.changes.length > 0) {
+                message += `<h4>Suggested Changes (${suggestions.changes.length}):</h4><ul>`;
+                suggestions.changes.forEach(change => {
+                    message += `<li><strong>${change.parameter}</strong>: ${change.current} → ${change.suggested}</li>`;
+                });
+                message += `</ul>`;
+                
+                if (suggestions.reasoning && suggestions.reasoning.length > 0) {
+                    message += `<h4>Reasoning:</h4><ul>`;
+                    suggestions.reasoning.forEach(reason => {
+                        message += `<li>${reason}</li>`;
+                    });
+                    message += `</ul>`;
+                }
+                
+                if (suggestions.expected_impact && suggestions.expected_impact.length > 0) {
+                    message += `<h4>Expected Impact:</h4><ul>`;
+                    suggestions.expected_impact.forEach(impact => {
+                        message += `<li style="color: #22c55e;">${impact}</li>`;
+                    });
+                    message += `</ul>`;
+                }
+                
+                message += `<p style="color: #f59e0b; margin-top: 15px;">⚠️ To apply these changes, enable auto-apply mode or manually update the parameters.</p>`;
+            }
+            
+            message += `</div>`;
+            
+            const containers = [document.getElementById('error-container'), document.getElementById('optimization-feedback')];
+            const html = `<div class="card" style="background: #1a2d3d; color: #e0e0e0; border-color: #2d4d5d; padding: 20px; max-height: 70vh; overflow-y: auto;">${message}<button class="btn btn-primary btn-sm" style="margin-top: 15px;" onclick="closeOptimizationResults()">Close</button></div>`;
+            containers.forEach(container => {
+                if (container) {
+                    container.innerHTML = html;
+                    container.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            });
+        }
+
+        function closeOptimizationResults() {
+            document.getElementById('error-container').innerHTML = '';
+            document.getElementById('optimization-feedback').innerHTML = '';
         }
 
         async function rollback(optimizationId) {
@@ -1048,15 +1114,25 @@
         }
 
         function showError(message) {
-            const container = document.getElementById('error-container');
-            container.innerHTML = `<div class="error">${message}</div>`;
-            setTimeout(() => container.innerHTML = '', 5000);
+            const containers = [document.getElementById('error-container'), document.getElementById('optimization-feedback')];
+            containers.forEach(container => {
+                if (container) {
+                    container.innerHTML = `<div class="error">${message}</div>`;
+                    container.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    setTimeout(() => container.innerHTML = '', 5000);
+                }
+            });
         }
 
         function showSuccess(message) {
-            const container = document.getElementById('error-container');
-            container.innerHTML = `<div class="card" style="background: #1a3d2a; color: #22c55e; border-color: #2d5a3d;">${message}</div>`;
-            setTimeout(() => container.innerHTML = '', 3000);
+            const containers = [document.getElementById('error-container'), document.getElementById('optimization-feedback')];
+            containers.forEach(container => {
+                if (container) {
+                    container.innerHTML = `<div class="card" style="background: #1a3d2a; color: #22c55e; border-color: #2d5a3d;">${message}</div>`;
+                    container.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    setTimeout(() => container.innerHTML = '', 5000);
+                }
+            });
         }
 
         // Auto-refresh every 30 seconds
