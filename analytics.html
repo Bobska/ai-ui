@@ -604,10 +604,31 @@
             }
         }
 
-        async function loadSelfAnalysisReport() {
+        async function loadSelfAnalysisReport(forceRefresh = false) {
             try {
-                const response = await fetch(`${API_BASE}/optimize/analyze?hours=168`, { method: 'POST' });
-                const data = await response.json();
+                let data;
+                
+                if (!forceRefresh) {
+                    // Try to load from cache first (fast, no LLM call)
+                    const cacheResponse = await fetch(`${API_BASE}/optimize/analysis-cached`);
+                    const cacheData = await cacheResponse.json();
+                    
+                    if (cacheData.success && cacheData.cached) {
+                        data = {
+                            success: true,
+                            analysis: cacheData.analysis,
+                            cached: true,
+                            cache_age: Math.floor(cacheData.cache_age_seconds / 60) // minutes
+                        };
+                    }
+                }
+                
+                // If no cache or force refresh, run new analysis
+                if (!data) {
+                    const response = await fetch(`${API_BASE}/optimize/analyze?hours=168`, { method: 'POST' });
+                    data = await response.json();
+                    data.cached = false;
+                }
 
                 if (!data.success || !data.analysis) {
                     document.getElementById('self-analysis-report').innerHTML = '<div class="no-data">No analysis data available. Click "Run New Analysis" to generate a report.</div>';
@@ -617,8 +638,16 @@
                 const analysis = data.analysis.data_analyzed;
                 const suggestions = data.analysis.suggestions || [];
 
+                // Show cache status if applicable
+                let html = '';
+                if (data.cached) {
+                    html += `<div style="background: #2d2d2d; padding: 10px; border-radius: 5px; margin-bottom: 15px; color: #b0b0b0;">`;
+                    html += `📌 Showing cached analysis (${data.cache_age} minutes old). Click "Run New Analysis" for fresh data.`;
+                    html += `</div>`;
+                }
+
                 // Parse AI's narrative analysis
-                let html = '<div class="analysis-section">';
+                html += '<div class="analysis-section">';
                 html += '<h3>📊 Current State</h3>';
                 html += `<div class="analysis-content">`;
                 html += `<strong>Conversations Analyzed:</strong> ${analysis.total_conversations || 0}<br>`;
@@ -636,10 +665,12 @@
                     html += '<h3>⚠️ Issues Identified</h3>';
                     issues.forEach(issue => {
                         const severity = issue.severity?.toLowerCase() || 'medium';
+                        const issueName = issue.issue ? issue.issue.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Unknown Issue';
+                        const issueDesc = `${issue.count} occurrences (${issue.percentage}% of conversations)`;
                         html += `<div class="issue-item ${severity}">`;
-                        html += `<strong>${issue.issue_type || 'Unknown Issue'}</strong> `;
-                        html += `<span class="status ${severity === 'high' ? 'inactive' : severity === 'medium' ? 'warning' : 'active'}">${issue.severity || 'MEDIUM'}</span><br>`;
-                        html += `<small>${issue.description || 'No description available'}</small>`;
+                        html += `<strong>${issueName}</strong> `;
+                        html += `<span class="status ${severity === 'high' ? 'inactive' : severity === 'medium' ? 'warning' : 'active'}">${(issue.severity || 'MEDIUM').toUpperCase()}</span><br>`;
+                        html += `<small>${issueDesc}</small>`;
                         html += '</div>';
                     });
                     html += '</div>';
@@ -724,8 +755,8 @@
         }
 
         async function refreshSelfAnalysis() {
-            document.getElementById('self-analysis-report').innerHTML = '<div class="loading">Running analysis...</div>';
-            await loadSelfAnalysisReport();
+            document.getElementById('self-analysis-report').innerHTML = '<div class="loading">Running fresh analysis (this may take 10-30 seconds)...</div>';
+            await loadSelfAnalysisReport(true); // Force refresh
         }
 
         async function loadAutomationStatus() {
