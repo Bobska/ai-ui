@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Analytics Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background-color: #2d2d2d;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            color: #b0b0b0;
+            font-size: 0.95rem;
+            margin-bottom: 1rem;
+        }
+
+        nav {
+            display: flex;
+            gap: 2rem;
+        }
+
+        nav a {
+            color: #b0b0b0;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        nav a:hover {
+            color: #ffffff;
+            background-color: #3a3a3a;
+        }
+
+        nav a.active {
+            color: #4a9eff;
+            font-weight: 500;
+        }
+
+        .container {
+            flex: 1;
+            padding: 2rem;
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: #2d2d2d;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            border: 1px solid #3a3a3a;
+        }
+
+        .card h2 {
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-icon {
+            font-size: 1.2em;
+        }
+
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .metric:last-child {
+            border-bottom: none;
+        }
+
+        .metric-label {
+            color: #b0b0b0;
+        }
+
+        .metric-value {
+            font-weight: bold;
+            color: #e0e0e0;
+        }
+
+        .metric-value.good {
+            color: #22c55e;
+        }
+
+        .metric-value.warning {
+            color: #f59e0b;
+        }
+
+        .metric-value.bad {
+            color: #ef4444;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+
+        .status.active {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status.inactive {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status.pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #4a9eff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #3a8eef;
+        }
+
+        .btn-success {
+            background: #22c55e;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #16a34a;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn-sm {
+            padding: 5px 10px;
+            font-size: 0.9em;
+        }
+
+        .jobs-list, .history-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .job-item, .history-item {
+            padding: 15px;
+            background: #3a3a3a;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            border: 1px solid #444;
+        }
+
+        .job-item h3, .history-item h3 {
+            font-size: 1.1em;
+            margin-bottom: 5px;
+            color: #ffffff;
+        }
+
+        .job-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-bottom: 20px;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -20px;
+            top: 0;
+            width: 10px;
+            height: 10px;
+            background: #4a9eff;
+            border-radius: 50%;
+        }
+
+        .timeline-item::after {
+            content: '';
+            position: absolute;
+            left: -16px;
+            top: 10px;
+            width: 2px;
+            height: calc(100% - 10px);
+            background: #3a3a3a;
+        }
+
+        .timeline-item:last-child::after {
+            display: none;
+        }
+
+        .chart-placeholder {
+            height: 200px;
+            background: #1a1a1a;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            font-style: italic;
+            border: 1px solid #3a3a3a;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #9ca3af;
+        }
+
+        .error {
+            background: #3d1515;
+            color: #ff6b6b;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border: 1px solid #5d2020;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 26px;
+            display: inline-block;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #22c55e;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(24px);
+        }
+
+        /* Self-Analysis Report Styles */
+        .analysis-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #1a1a1a;
+            border-radius: 5px;
+            border-left: 4px solid #4a9eff;
+        }
+
+        .analysis-section h3 {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+            color: #4a9eff;
+        }
+
+        .analysis-section h4 {
+            font-size: 1em;
+            margin-top: 15px;
+            margin-bottom: 8px;
+            color: #ffffff;
+        }
+
+        .analysis-content {
+            color: #b0b0b0;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        .issue-item {
+            padding: 10px;
+            background: #3a3a3a;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            border-left: 3px solid #ef4444;
+        }
+
+        .issue-item.high {
+            border-left-color: #ef4444;
+        }
+
+        .issue-item.medium {
+            border-left-color: #f59e0b;
+        }
+
+        .issue-item.low {
+            border-left-color: #22c55e;
+        }
+
+        .suggestion-item {
+            padding: 12px;
+            background: #2d2d2d;
+            border-radius: 5px;
+            margin-bottom: 12px;
+            border: 1px solid #4a9eff;
+        }
+
+        .suggestion-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .suggestion-title {
+            font-weight: bold;
+            color: #ffffff;
+            font-size: 1.05em;
+        }
+
+        .suggestion-type {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+
+        .suggestion-type.ai-optimizable {
+            background: #22c55e;
+            color: white;
+        }
+
+        .suggestion-type.code-required {
+            background: #ef4444;
+            color: white;
+        }
+
+        .suggestion-details {
+            color: #b0b0b0;
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+
+        .suggestion-impact {
+            font-size: 0.9em;
+            color: #4a9eff;
+            font-style: italic;
+        }
+
+        .phase-status {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            margin-left: 10px;
+            font-weight: bold;
+        }
+
+        .phase-status.complete {
+            background: #22c55e;
+            color: white;
+        }
+
+        .phase-status.in-progress {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .phase-status.pending {
+            background: #6b7280;
+            color: white;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 20px;
+            color: #6b7280;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🤖 AI Analytics Dashboard</h1>
+        <p class="subtitle">Real-time performance monitoring & self-improvement tracking</p>
+        <nav>
+            <a href="index.html">💬 Chat</a>
+            <a href="suggestions.html">💡 Suggestions</a>
+            <a href="analytics.html" class="active">📊 Analytics</a>
+        </nav>
+    </header>
+
+    <div class="container">
+        <div id="error-container"></div>
+
+        <!-- Performance Overview -->
+        <div class="card">
+            <h2><span class="card-icon">📊</span> Performance Overview</h2>
+            <div id="performance-overview" class="loading">Loading...</div>
+        </div>
+
+        <!-- Self-Analysis Report -->
+        <div class="card" style="grid-column: 1 / -1;">
+            <h2><span class="card-icon">🔍</span> AI Self-Analysis Report</h2>
+            <div id="self-analysis-report" class="loading">Loading...</div>
+            <button class="btn btn-primary btn-sm" style="margin-top: 15px;" onclick="refreshSelfAnalysis()">🔄 Run New Analysis</button>
+        </div>
+
+        <!-- Automation Status -->
+        <div class="dashboard-grid">
+            <div class="card">
+                <h2><span class="card-icon">⚙️</span> Automation Status</h2>
+                <div id="automation-status" class="loading">Loading...</div>
+            </div>
+
+            <div class="card">
+                <h2><span class="card-icon">📅</span> Scheduler Status</h2>
+                <div id="scheduler-status" class="loading">Loading...</div>
+            </div>
+
+            <div class="card">
+                <h2><span class="card-icon">↩️</span> Rollback Stats</h2>
+                <div id="rollback-stats" class="loading">Loading...</div>
+            </div>
+        </div>
+
+        <!-- Optimizers -->
+        <div id="optimization-feedback" style="margin-bottom: 20px;"></div>
+        
+        <div class="dashboard-grid">
+            <div class="card">
+                <h2><span class="card-icon">💬</span> Prompt Optimizer</h2>
+                <div id="prompt-optimizer">
+                    <div class="chart-placeholder">Prompt performance chart</div>
+                    <button class="btn btn-primary btn-sm" style="margin-top: 15px;" onclick="triggerOptimization('prompt')">🎯 Optimize Now</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2><span class="card-icon">🧠</span> Memory Optimizer</h2>
+                <div id="memory-optimizer">
+                    <div class="chart-placeholder">Memory hit rate chart</div>
+                    <button class="btn btn-primary btn-sm" style="margin-top: 15px;" onclick="triggerOptimization('memory')">🧠 Optimize Now</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2><span class="card-icon">⚡</span> Response Time Optimizer</h2>
+                <div id="response-time-optimizer">
+                    <div class="chart-placeholder">Response time trend chart</div>
+                    <button class="btn btn-primary btn-sm" style="margin-top: 15px;" onclick="triggerOptimization('response-time')">⚡ Optimize Now</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scheduled Jobs -->
+        <div class="card">
+            <h2><span class="card-icon">⏰</span> Scheduled Jobs</h2>
+            <div id="scheduled-jobs" class="loading">Loading...</div>
+        </div>
+
+        <!-- Optimization History -->
+        <div class="card">
+            <h2><span class="card-icon">📜</span> Optimization History</h2>
+            <div id="optimization-history" class="loading">Loading...</div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000/api';
+
+        // Load all data on page load
+        async function loadDashboard() {
+            try {
+                await Promise.all([
+                    loadPerformanceOverview(),
+                    loadSelfAnalysisReport(),
+                    loadAutomationStatus(),
+                    loadSchedulerStatus(),
+                    loadRollbackStats(),
+                    loadScheduledJobs(),
+                    loadOptimizationHistory()
+                ]);
+            } catch (error) {
+                showError('Failed to load dashboard: ' + error.message);
+            }
+        }
+
+        async function loadPerformanceOverview() {
+            try {
+                const response = await fetch(`${API_BASE}/analytics/performance?hours=24`);
+                const data = await response.json();
+
+                // The performance data is nested under 'summary'
+                const summary = data.summary;
+                const html = `
+                    <div class="metric">
+                        <span class="metric-label">Total Conversations (24h)</span>
+                        <span class="metric-value">${summary.total_conversations || 0}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Avg Quality Score</span>
+                        <span class="metric-value ${summary.avg_quality_score > 0.8 ? 'good' : summary.avg_quality_score > 0.6 ? 'warning' : 'bad'}">
+                            ${(summary.avg_quality_score || 0).toFixed(2)}
+                        </span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Avg Response Time</span>
+                        <span class="metric-value ${summary.avg_response_time_ms < 5000 ? 'good' : summary.avg_response_time_ms < 8000 ? 'warning' : 'bad'}">
+                            ${(summary.avg_response_time_ms || 0).toFixed(0)}ms
+                        </span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Memory Hit Rate</span>
+                        <span class="metric-value ${summary.memory_hit_rate > 50 ? 'good' : summary.memory_hit_rate > 20 ? 'warning' : 'bad'}">
+                            ${(summary.memory_hit_rate || 0).toFixed(1)}%
+                        </span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Feedback Ratio</span>
+                        <span class="metric-value ${summary.feedback_ratio > 50 ? 'good' : 'warning'}">
+                            ${(summary.feedback_ratio || 0).toFixed(1)}%
+                        </span>
+                    </div>
+                `;
+
+                document.getElementById('performance-overview').innerHTML = html;
+            } catch (error) {
+                document.getElementById('performance-overview').innerHTML = `<div class="error">Failed to load: ${error.message}</div>`;
+            }
+        }
+
+        async function loadSelfAnalysisReport(forceRefresh = false) {
+            try {
+                let data;
+                
+                if (!forceRefresh) {
+                    // Try to load from cache first (fast, no LLM call)
+                    const cacheResponse = await fetch(`${API_BASE}/optimize/analysis-cached`);
+                    const cacheData = await cacheResponse.json();
+                    
+                    if (cacheData.success && cacheData.cached) {
+                        data = {
+                            success: true,
+                            analysis: cacheData.analysis,
+                            cached: true,
+                            cache_age: Math.floor(cacheData.cache_age_seconds / 60) // minutes
+                        };
+                    }
+                }
+                
+                // If no cache or force refresh, run new analysis
+                if (!data) {
+                    const response = await fetch(`${API_BASE}/optimize/analyze?hours=168`, { method: 'POST' });
+                    data = await response.json();
+                    data.cached = false;
+                }
+
+                if (!data.success || !data.analysis) {
+                    document.getElementById('self-analysis-report').innerHTML = '<div class="no-data">No analysis data available. Click "Run New Analysis" to generate a report.</div>';
+                    return;
+                }
+
+                const analysis = data.analysis.data_analyzed;
+                const suggestions = data.analysis.suggestions || [];
+
+                // Show cache status if applicable
+                let html = '';
+                if (data.cached) {
+                    html += `<div style="background: #2d2d2d; padding: 10px; border-radius: 5px; margin-bottom: 15px; color: #b0b0b0;">`;
+                    html += `📌 Showing cached analysis (${data.cache_age} minutes old). Click "Run New Analysis" for fresh data.`;
+                    html += `</div>`;
+                }
+
+                // Parse AI's narrative analysis
+                html += '<div class="analysis-section">';
+                html += '<h3>📊 Current State</h3>';
+                html += `<div class="analysis-content">`;
+                html += `<strong>Conversations Analyzed:</strong> ${analysis.total_conversations || 0}<br>`;
+                html += `<strong>Avg Quality Score:</strong> ${(analysis.avg_quality_score || 0).toFixed(2)}/1.0<br>`;
+                html += `<strong>Avg Response Time:</strong> ${(analysis.avg_response_time_ms || 0).toFixed(0)}ms<br>`;
+                html += `<strong>Memory Hit Rate:</strong> ${(analysis.memory_hit_rate || 0).toFixed(1)}%<br>`;
+                html += `<strong>User Satisfaction:</strong> ${(analysis.feedback_positive_ratio * 100 || 0).toFixed(1)}%<br>`;
+                html += `<strong>Trend:</strong> <span class="status ${analysis.trend === 'IMPROVING' ? 'active' : analysis.trend === 'STABLE' ? 'warning' : 'inactive'}">${analysis.trend || 'STABLE'}</span>`;
+                html += '</div></div>';
+
+                // Issues Identified
+                const issues = data.analysis.issues_identified || [];
+                if (issues.length > 0) {
+                    html += '<div class="analysis-section">';
+                    html += '<h3>⚠️ Issues Identified</h3>';
+                    issues.forEach(issue => {
+                        const severity = issue.severity?.toLowerCase() || 'medium';
+                        const issueName = issue.issue ? issue.issue.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Unknown Issue';
+                        const issueDesc = `${issue.count} occurrences (${issue.percentage}% of conversations)`;
+                        html += `<div class="issue-item ${severity}">`;
+                        html += `<strong>${issueName}</strong> `;
+                        html += `<span class="status ${severity === 'high' ? 'inactive' : severity === 'medium' ? 'warning' : 'active'}">${(issue.severity || 'MEDIUM').toUpperCase()}</span><br>`;
+                        html += `<small>${issueDesc}</small>`;
+                        html += '</div>';
+                    });
+                    html += '</div>';
+                }
+
+                // AI-Generated Improvement Suggestions
+                if (suggestions.length > 0) {
+                    html += '<div class="analysis-section">';
+                    html += '<h3>💡 AI\'s Improvement Suggestions</h3>';
+                    html += '<p style="color: #b0b0b0; margin-bottom: 15px;">The AI has analyzed its performance and identified these optimization opportunities:</p>';
+                    
+                    suggestions.forEach((suggestion, index) => {
+                        // Get suggestion text (API returns 'text' field)
+                        const suggestionText = suggestion.text || suggestion.description || 'No suggestion available';
+                        const suggestionType = suggestion.category || suggestion.type || 'general';
+                        
+                        // Determine if this requires code changes or can be auto-optimized
+                        const requiresCode = suggestionText.toLowerCase().includes('implement') ||
+                                            suggestionText.toLowerCase().includes('add new') ||
+                                            suggestionText.toLowerCase().includes('create') ||
+                                            suggestionText.toLowerCase().includes('develop') ||
+                                            suggestionText.toLowerCase().includes('build');
+                        
+                        const canAutoOptimize = suggestionType === 'prompt' ||
+                                               suggestionType === 'memory' ||
+                                               suggestionType === 'performance' ||
+                                               suggestionType === 'response_strategy' ||
+                                               suggestionText.toLowerCase().includes('cache') ||
+                                               suggestionText.toLowerCase().includes('retrieval') ||
+                                               suggestionText.toLowerCase().includes('parameter');
+
+                        html += `<div class="suggestion-item">`;
+                        html += `<div class="suggestion-header">`;
+                        html += `<div class="suggestion-title">${index + 1}. ${suggestionType.charAt(0).toUpperCase() + suggestionType.slice(1).replace('_', ' ')}</div>`;
+                        
+                        if (requiresCode) {
+                            html += `<span class="suggestion-type code-required">⚙️ Code Required</span>`;
+                        } else if (canAutoOptimize) {
+                            html += `<span class="suggestion-type ai-optimizable">🤖 AI Can Auto-Optimize</span>`;
+                        }
+                        html += `</div>`;
+                        
+                        html += `<div class="suggestion-details">${suggestionText}</div>`;
+                        
+                        // Show priority if available
+                        if (suggestion.priority) {
+                            const priorityColor = suggestion.priority === 'high' ? '#ef4444' : suggestion.priority === 'medium' ? '#f59e0b' : '#22c55e';
+                            html += `<div style="margin-top: 8px; color: ${priorityColor}; font-size: 0.9em;">Priority: ${suggestion.priority.toUpperCase()}</div>`;
+                        }
+                        
+                        html += `</div>`;
+                    });
+                    html += '</div>';
+                }
+
+                // Implementation Status (Phase tracking)
+                html += '<div class="analysis-section">';
+                html += '<h3>🚀 Implementation Status</h3>';
+                html += '<h4>Phase 1: Safe Self-Optimization</h4>';
+                html += '<div class="analysis-content">';
+                html += '✅ Phase 1.1: Performance Tracking <span class="phase-status complete">COMPLETE</span><br>';
+                html += '✅ Phase 1.2: Self-Analysis Engine <span class="phase-status complete">COMPLETE</span><br>';
+                html += '✅ Phase 1.3: Prompt Optimization <span class="phase-status complete">COMPLETE</span> <small>(AI can auto-optimize prompts)</small><br>';
+                html += '✅ Phase 1.4: Memory Strategy Learning <span class="phase-status complete">COMPLETE</span> <small>(AI can auto-tune retrieval)</small><br>';
+                html += '✅ Phase 1.5: Response Time Optimization <span class="phase-status complete">COMPLETE</span> <small>(AI can auto-adjust cache)</small><br>';
+                html += '✅ Phase 1.6: Automation & Continuous Learning <span class="phase-status complete">COMPLETE</span> <small>(AI can self-improve 24/7)</small><br>';
+                html += '</div>';
+                
+                html += '<h4 style="margin-top: 15px;">When Code Modifications Are Needed:</h4>';
+                html += '<div class="analysis-content">';
+                html += '🔧 <strong>New Features:</strong> Adding capabilities the AI doesn\'t have (e.g., image generation, web scraping)<br>';
+                html += '🔧 <strong>Architecture Changes:</strong> Modifying core systems, adding new modules, changing data structures<br>';
+                html += '🔧 <strong>Integration:</strong> Connecting to external APIs, databases, or services<br>';
+                html += '🔧 <strong>Performance Bottlenecks:</strong> Algorithmic improvements, code optimization, system architecture<br><br>';
+                html += '🤖 <strong>AI Can Self-Optimize:</strong> Prompts, memory retrieval parameters, caching strategies, conversation flow, response formatting<br>';
+                html += '🤖 <strong>Automatic Improvements:</strong> Enable "Auto-Apply" above to let AI continuously optimize itself based on performance data';
+                html += '</div>';
+                html += '</div>';
+
+                document.getElementById('self-analysis-report').innerHTML = html;
+            } catch (error) {
+                console.error('Self-analysis error:', error);
+                document.getElementById('self-analysis-report').innerHTML = `<div class="error">Failed to load analysis: ${error.message}</div>`;
+            }
+        }
+
+        async function refreshSelfAnalysis() {
+            document.getElementById('self-analysis-report').innerHTML = '<div class="loading">Running fresh analysis (this may take 10-30 seconds)...</div>';
+            await loadSelfAnalysisReport(true); // Force refresh
+        }
+
+        async function loadAutomationStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/automation/status`);
+                const data = await response.json();
+
+                const auto = data.auto_optimizer;
+                const html = `
+                    <div class="metric">
+                        <span class="metric-label">Auto-Apply</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" ${auto.auto_apply_enabled ? 'checked' : ''} onchange="toggleAutoApply(this.checked)">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Min Confidence</span>
+                        <span class="metric-value">${(auto.settings.min_confidence_threshold * 100).toFixed(0)}%</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Min Data Points</span>
+                        <span class="metric-value">${auto.settings.min_data_points}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Max Degradation</span>
+                        <span class="metric-value">${(auto.settings.max_degradation_allowed * 100).toFixed(0)}%</span>
+                    </div>
+                `;
+
+                document.getElementById('automation-status').innerHTML = html;
+            } catch (error) {
+                document.getElementById('automation-status').innerHTML = `<div class="error">Failed to load: ${error.message}</div>`;
+            }
+        }
+
+        async function loadSchedulerStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/scheduler/status`);
+                const data = await response.json();
+
+                const running = data.status.scheduler_running;
+                const jobCount = Object.values(data.status.jobs).filter(j => j.enabled).length;
+
+                const html = `
+                    <div class="metric">
+                        <span class="metric-label">Scheduler</span>
+                        <span class="status ${running ? 'active' : 'inactive'}">${running ? 'Running' : 'Stopped'}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Active Jobs</span>
+                        <span class="metric-value">${jobCount} / ${Object.keys(data.status.jobs).length}</span>
+                    </div>
+                `;
+
+                document.getElementById('scheduler-status').innerHTML = html;
+            } catch (error) {
+                document.getElementById('scheduler-status').innerHTML = `<div class="error">Failed to load: ${error.message}</div>`;
+            }
+        }
+
+        async function loadRollbackStats() {
+            try {
+                const response = await fetch(`${API_BASE}/rollback/stats`);
+                const data = await response.json();
+
+                const stats = data.stats;
+                const html = `
+                    <div class="metric">
+                        <span class="metric-label">Total Optimizations</span>
+                        <span class="metric-value">${stats.total_optimizations}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Successful</span>
+                        <span class="metric-value good">${stats.successful_optimizations}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Rolled Back</span>
+                        <span class="metric-value warning">${stats.rolled_back_optimizations}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Pending Validation</span>
+                        <span class="metric-value">${stats.pending_validation}</span>
+                    </div>
+                `;
+
+                document.getElementById('rollback-stats').innerHTML = html;
+            } catch (error) {
+                document.getElementById('rollback-stats').innerHTML = `<div class="error">Failed to load: ${error.message}</div>`;
+            }
+        }
+
+        async function loadScheduledJobs() {
+            try {
+                const response = await fetch(`${API_BASE}/scheduler/status`);
+                const data = await response.json();
+
+                const jobs = data.status.jobs;
+                let html = '<div class="jobs-list">';
+
+                for (const [name, config] of Object.entries(jobs)) {
+                    html += `
+                        <div class="job-item">
+                            <h3>${name.replace(/_/g, ' ').toUpperCase()}</h3>
+                            <div class="metric">
+                                <span class="metric-label">Status</span>
+                                <span class="status ${config.enabled ? 'active' : 'inactive'}">
+                                    ${config.enabled ? 'Enabled' : 'Disabled'}
+                                </span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-label">Schedule</span>
+                                <span class="metric-value">${config.schedule} @ ${config.time}${config.day ? ' (' + config.day + ')' : ''}</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-label">Run Count</span>
+                                <span class="metric-value">${config.run_count}</span>
+                            </div>
+                            <div class="job-controls">
+                                <button class="btn ${config.enabled ? 'btn-danger' : 'btn-success'} btn-sm" onclick="toggleJob('${name}', ${!config.enabled})">
+                                    ${config.enabled ? 'Disable' : 'Enable'}
+                                </button>
+                                <button class="btn btn-primary btn-sm" onclick="triggerJob('${name}')">
+                                    Run Now
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                html += '</div>';
+                document.getElementById('scheduled-jobs').innerHTML = html;
+            } catch (error) {
+                document.getElementById('scheduled-jobs').innerHTML = `<div class="error">Failed to load: ${error.message}</div>`;
+            }
+        }
+
+        async function loadOptimizationHistory() {
+            try {
+                const response = await fetch(`${API_BASE}/rollback/history?limit=10`);
+                const data = await response.json();
+
+                if (data.history.length === 0) {
+                    document.getElementById('optimization-history').innerHTML = '<p style="color: #9ca3af; text-align: center;">No optimization history yet</p>';
+                    return;
+                }
+
+                let html = '<div class="timeline">';
+
+                for (const item of data.history) {
+                    const timestamp = new Date(item.timestamp).toLocaleString();
+                    const statusClass = item.status === 'validated_success' ? 'good' : 
+                                      item.status === 'rolled_back' ? 'warning' : 
+                                      item.status === 'validated_failed' ? 'bad' : '';
+
+                    html += `
+                        <div class="timeline-item">
+                            <strong>${timestamp}</strong><br>
+                            <span class="metric-value ${statusClass}">${item.status.replace(/_/g, ' ').toUpperCase()}</span><br>
+                            <small>${item.changes_applied ? item.changes_applied.length : 0} changes applied</small>
+                            ${item.can_rollback ? `<br><button class="btn btn-danger btn-sm" style="margin-top: 5px;" onclick="rollback('${item.optimization_id}')">Rollback</button>` : ''}
+                        </div>
+                    `;
+                }
+
+                html += '</div>';
+                document.getElementById('optimization-history').innerHTML = html;
+            } catch (error) {
+                document.getElementById('optimization-history').innerHTML = `<div class="error">Failed to load: ${error.message}</div>`;
+            }
+        }
+
+        async function toggleAutoApply(enabled) {
+            try {
+                const response = await fetch(`${API_BASE}/automation/settings`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ auto_apply_enabled: enabled })
+                });
+
+                if (response.ok) {
+                    showSuccess(`Auto-apply ${enabled ? 'enabled' : 'disabled'}`);
+                }
+            } catch (error) {
+                showError('Failed to update settings: ' + error.message);
+            }
+        }
+
+        async function toggleJob(jobName, enable) {
+            try {
+                if (enable) {
+                    // Enable with default schedule
+                    const response = await fetch(`${API_BASE}/scheduler/schedule`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            job_name: jobName,
+                            schedule_type: 'daily',
+                            hour: 2
+                        })
+                    });
+
+                    if (response.ok) {
+                        showSuccess(`Job '${jobName}' enabled`);
+                        await loadScheduledJobs();
+                    }
+                } else {
+                    const response = await fetch(`${API_BASE}/scheduler/unschedule/${jobName}`, {
+                        method: 'POST'
+                    });
+
+                    if (response.ok) {
+                        showSuccess(`Job '${jobName}' disabled`);
+                        await loadScheduledJobs();
+                    }
+                }
+            } catch (error) {
+                showError('Failed to toggle job: ' + error.message);
+            }
+        }
+
+        async function triggerJob(jobName) {
+            try {
+                showSuccess(`Triggering job '${jobName}'...`);
+                const response = await fetch(`${API_BASE}/scheduler/trigger/${jobName}`, {
+                    method: 'POST'
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    showSuccess(`Job '${jobName}' completed successfully!`);
+                    await loadDashboard();
+                } else {
+                    showError(`Job failed: ${data.error}`);
+                }
+            } catch (error) {
+                showError('Failed to trigger job: ' + error.message);
+            }
+        }
+
+        async function triggerOptimization(type) {
+            const endpoints = {
+                'prompt': 'prompt-optimization',
+                'memory': 'memory-optimization',
+                'response-time': 'response-time-optimization'
+            };
+
+            try {
+                showSuccess(`🔄 Running ${type} optimization...`);
+                const response = await fetch(`${API_BASE}/automation/run/${endpoints[type]}`, {
+                    method: 'POST'
+                });
+
+                const data = await response.json();
+                
+                if (data.success && data.result) {
+                    const result = data.result;
+                    
+                    if (result.action === 'none') {
+                        showSuccess(`✅ ${type} optimization complete: ${result.reason || 'No optimizations needed'}`);
+                    } else if (result.action === 'manual_review_required') {
+                        const changes = result.suggestions?.changes?.length || 0;
+                        showSuccess(`✅ ${type} optimization complete: ${changes} suggestions found - Review in Automation section below`);
+                        
+                        // Show modal with suggestions
+                        showOptimizationResults(type, result);
+                    } else if (result.action === 'auto_applied') {
+                        showSuccess(`✅ ${type} optimization auto-applied! Snapshot: ${result.snapshot_id}`);
+                    } else {
+                        showSuccess(`✅ ${type} optimization complete: ${result.action}`);
+                    }
+                    
+                    await loadDashboard();
+                } else {
+                    showError(`❌ Optimization failed: ${JSON.stringify(data.result || data)}`);
+                }
+            } catch (error) {
+                showError('❌ Failed to run optimization: ' + error.message);
+            }
+        }
+
+        function showOptimizationResults(type, result) {
+            const suggestions = result.suggestions;
+            let message = `<div style="max-width: 600px; text-align: left;">`;
+            message += `<h3 style="margin-top: 0;">${type.toUpperCase()} Optimization Results</h3>`;
+            
+            if (suggestions.changes && suggestions.changes.length > 0) {
+                message += `<h4>Suggested Changes (${suggestions.changes.length}):</h4><ul>`;
+                suggestions.changes.forEach(change => {
+                    message += `<li><strong>${change.parameter}</strong>: ${change.current} → ${change.suggested}</li>`;
+                });
+                message += `</ul>`;
+                
+                if (suggestions.reasoning && suggestions.reasoning.length > 0) {
+                    message += `<h4>Reasoning:</h4><ul>`;
+                    suggestions.reasoning.forEach(reason => {
+                        message += `<li>${reason}</li>`;
+                    });
+                    message += `</ul>`;
+                }
+                
+                if (suggestions.expected_impact && suggestions.expected_impact.length > 0) {
+                    message += `<h4>Expected Impact:</h4><ul>`;
+                    suggestions.expected_impact.forEach(impact => {
+                        message += `<li style="color: #22c55e;">${impact}</li>`;
+                    });
+                    message += `</ul>`;
+                }
+                
+                message += `<p style="color: #f59e0b; margin-top: 15px;">⚠️ To apply these changes, enable auto-apply mode or manually update the parameters.</p>`;
+            }
+            
+            message += `</div>`;
+            
+            const containers = [document.getElementById('error-container'), document.getElementById('optimization-feedback')];
+            const html = `<div class="card" style="background: #1a2d3d; color: #e0e0e0; border-color: #2d4d5d; padding: 20px; max-height: 70vh; overflow-y: auto;">${message}<button class="btn btn-primary btn-sm" style="margin-top: 15px;" onclick="closeOptimizationResults()">Close</button></div>`;
+            containers.forEach(container => {
+                if (container) {
+                    container.innerHTML = html;
+                    container.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            });
+        }
+
+        function closeOptimizationResults() {
+            document.getElementById('error-container').innerHTML = '';
+            document.getElementById('optimization-feedback').innerHTML = '';
+        }
+
+        async function rollback(optimizationId) {
+            if (!confirm('Are you sure you want to rollback this optimization?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/rollback/execute/${optimizationId}`, {
+                    method: 'POST'
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    showSuccess('Rollback successful!');
+                    await loadDashboard();
+                } else {
+                    showError(`Rollback failed: ${data.error}`);
+                }
+            } catch (error) {
+                showError('Failed to execute rollback: ' + error.message);
+            }
+        }
+
+        function showError(message) {
+            const containers = [document.getElementById('error-container'), document.getElementById('optimization-feedback')];
+            containers.forEach(container => {
+                if (container) {
+                    container.innerHTML = `<div class="error">${message}</div>`;
+                    container.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    setTimeout(() => container.innerHTML = '', 5000);
+                }
+            });
+        }
+
+        function showSuccess(message) {
+            const containers = [document.getElementById('error-container'), document.getElementById('optimization-feedback')];
+            containers.forEach(container => {
+                if (container) {
+                    container.innerHTML = `<div class="card" style="background: #1a3d2a; color: #22c55e; border-color: #2d5a3d;">${message}</div>`;
+                    container.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    setTimeout(() => container.innerHTML = '', 5000);
+                }
+            });
+        }
+
+        // Auto-refresh every 30 seconds
+        setInterval(loadDashboard, 30000);
+
+        // Initial load
+        loadDashboard();
+    </script>
+</body>
+</html>

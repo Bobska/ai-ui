@@ -267,6 +267,34 @@
             font-family: 'Courier New', monospace;
         }
 
+        /* Environment Selector */
+        .env-selector {
+            padding: 0.75rem 1rem;
+            background-color: #1a1a1a;
+            border: 1px solid #3a3a3a;
+            border-radius: 6px;
+            color: #e0e0e0;
+            font-size: 0.95rem;
+            cursor: pointer;
+            min-width: 200px;
+            transition: border-color 0.2s;
+        }
+
+        .env-selector:hover {
+            border-color: #4a9eff;
+        }
+
+        .env-selector:focus {
+            outline: none;
+            border-color: #4a9eff;
+            box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.2);
+        }
+
+        .env-selector option {
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+        }
+
         /* Text Display */
         .text-display {
             padding: 0.75rem 1rem;
@@ -391,6 +419,42 @@
             word-wrap: break-word;
         }
 
+        /* Warning Banner */
+        .warning-banner {
+            background-color: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 8px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 1.5rem;
+            display: none;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .warning-banner.show {
+            display: flex;
+        }
+
+        .warning-icon {
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .warning-content {
+            flex: 1;
+        }
+
+        .warning-title {
+            font-weight: 600;
+            color: #ef4444;
+            margin-bottom: 0.25rem;
+        }
+
+        .warning-message {
+            font-size: 0.9rem;
+            color: #e0e0e0;
+        }
+
         /* Loading State */
         .loading {
             text-align: center;
@@ -474,6 +538,7 @@
             <nav>
                 <a href="index.html">Chat</a>
                 <a href="memories.html">Memories</a>
+                <a href="suggestions.html">Suggestions</a>
                 <a href="debug.html">Debug</a>
                 <a href="settings.html" class="active">Settings</a>
             </nav>
@@ -484,6 +549,17 @@
         <div class="page-header">
             <h2 class="page-title">Settings</h2>
             <p class="page-subtitle">Configure your AI assistant preferences</p>
+        </div>
+
+        <!-- Server Offline Warning -->
+        <div class="warning-banner" id="serverOfflineWarning">
+            <span class="warning-icon">⚠️</span>
+            <div class="warning-content">
+                <div class="warning-title">Server Offline</div>
+                <div class="warning-message">
+                    The AI server is not running. Start the server with <code style="background: rgba(0,0,0,0.3); padding: 0.2rem 0.5rem; border-radius: 4px;">start_api.bat</code> to view live information and save settings.
+                </div>
+            </div>
         </div>
 
         <!-- Loading State -->
@@ -572,10 +648,127 @@
                 </div>
             </div>
 
+            <!-- Conversation History Settings -->
+            <div class="settings-card">
+                <h2>💬 Conversation History</h2>
+                <p>Control how the AI maintains conversation context</p>
+                
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <div class="setting-label">History Length</div>
+                        <div class="setting-description">Number of conversation turns to remember (1-50)</div>
+                    </div>
+                    <div class="setting-control">
+                        <div class="slider-container">
+                            <input type="range" class="slider-input" id="historyLength" min="1" max="50" value="10" step="1">
+                            <span class="slider-value" id="historyLengthValue">10 turns</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-grid" style="margin-top: 1rem;">
+                    <div class="info-item">
+                        <div class="info-label">Current History</div>
+                        <div class="info-value" id="currentHistoryLength">Loading...</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Max Messages</div>
+                        <div class="info-value" id="maxHistoryMessages">Loading...</div>
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-primary" id="saveHistoryBtn">
+                        💾 Save History Settings
+                    </button>
+                    <button class="btn" id="clearHistoryBtn" style="background-color: rgba(239, 68, 68, 0.2); color: #ef4444;">
+                        🗑️ Clear Current History
+                    </button>
+                </div>
+            </div>
+
+            <!-- Server Information -->
+            <div class="settings-card">
+                <h2>�️ Server Information</h2>
+                <p>Current server status and configuration</p>
+                
+                <div class="info-grid" id="serverInfo">
+                    <div class="info-item">
+                        <div class="info-label">Server Status</div>
+                        <div class="info-value" id="serverStatus">
+                            <span style="color: #22c55e;">●</span> Loading...
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Environment</div>
+                        <div class="info-value" id="environment">Loading...</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Database Environment</div>
+                        <div class="info-value" id="dbEnvironment">Loading...</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Database Path</div>
+                        <div class="info-value" id="databasePath">Loading...</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Database Type</div>
+                        <div class="info-value" id="databaseType">Loading...</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Server Uptime</div>
+                        <div class="info-value" id="serverUptime">Loading...</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">API Endpoint</div>
+                        <div class="info-value" id="apiEndpoint">http://localhost:8000</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">API Version</div>
+                        <div class="info-value" id="apiVersion">1.0.0</div>
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn" id="refreshServerInfoBtn">
+                        🔄 Refresh Server Info
+                    </button>
+                    <button class="btn btn-primary" id="viewApiDocsBtn">
+                        📖 View API Documentation
+                    </button>
+                </div>
+            </div>
+
+            <!-- Environment & Server Control -->
+            <div class="settings-card">
+                <h2>🔄 Environment & Server Control</h2>
+                <p>Switch database environments and control server</p>
+                
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <div class="setting-label">Database Environment</div>
+                        <div class="setting-description">Select environment and restart to apply</div>
+                    </div>
+                    <div class="setting-control">
+                        <select id="environmentSelector" class="env-selector">
+                            <option value="development">Development</option>
+                            <option value="production">Production</option>
+                            <option value="test">Test</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-primary" id="restartServerBtn" style="font-size: 1rem;">
+                        🔄 Apply & Restart Server
+                    </button>
+                </div>
+            </div>
+
             <!-- System Information -->
             <div class="settings-card">
-                <h2>💻 System Information</h2>
-                <p>Hardware and storage information (read-only)</p>
+                <h2>💾 Memory & Storage</h2>
+                <p>Database and memory statistics</p>
                 
                 <div class="info-grid" id="systemInfo">
                     <div class="info-item">
@@ -583,16 +776,51 @@
                         <div class="info-value" id="totalMemories">Loading...</div>
                     </div>
                     <div class="info-item">
-                        <div class="info-label">Server Status</div>
-                        <div class="info-value" id="serverStatus">Loading...</div>
+                        <div class="info-label">User Facts</div>
+                        <div class="info-value" id="userFacts">Loading...</div>
                     </div>
                     <div class="info-item">
-                        <div class="info-label">API Endpoint</div>
-                        <div class="info-value" id="apiEndpoint">http://localhost:8000</div>
+                        <div class="info-label">Preferences</div>
+                        <div class="info-value" id="preferences">Loading...</div>
                     </div>
+                    <div class="info-item">
+                        <div class="info-label">Technical Notes</div>
+                        <div class="info-value" id="technical">Loading...</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Projects</div>
+                        <div class="info-value" id="projects">Loading...</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Goals</div>
+                        <div class="info-value" id="goals">Loading...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ollama Information -->
+            <div class="settings-card">
+                <h2>🤖 Ollama Configuration</h2>
+                <p>AI model server settings</p>
+                
+                <div class="info-grid">
                     <div class="info-item">
                         <div class="info-label">Ollama Host</div>
                         <div class="info-value" id="ollamaHost">Loading...</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Ollama Status</div>
+                        <div class="info-value" id="ollamaStatus">
+                            <span style="color: #22c55e;">●</span> Loading...
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Active Model</div>
+                        <div class="info-value" id="activeModel">Loading...</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Model Status</div>
+                        <div class="info-value" id="modelStatus">Loading...</div>
                     </div>
                 </div>
             </div>
@@ -631,13 +859,27 @@
         const saveLearningBtn = document.getElementById('saveLearningBtn');
         const clearAllMemoriesBtn = document.getElementById('clearAllMemoriesBtn');
         const resetSettingsBtn = document.getElementById('resetSettingsBtn');
+        const refreshServerInfoBtn = document.getElementById('refreshServerInfoBtn');
+        const viewApiDocsBtn = document.getElementById('viewApiDocsBtn');
+        const serverOfflineWarning = document.getElementById('serverOfflineWarning');
+        const environmentSelector = document.getElementById('environmentSelector');
+        const restartServerBtn = document.getElementById('restartServerBtn');
+        const historyLengthSlider = document.getElementById('historyLength');
+        const historyLengthValue = document.getElementById('historyLengthValue');
+        const saveHistoryBtn = document.getElementById('saveHistoryBtn');
+        const clearHistoryBtn = document.getElementById('clearHistoryBtn');
 
         // Current config
         let currentConfig = {};
+        let isServerOnline = false;
 
         // Initialize
         window.addEventListener('load', function() {
             loadConfig();
+            loadConversationHistoryInfo();
+            // Auto-refresh server info every 30 seconds
+            setInterval(loadServerInfo, 30000);
+            setInterval(loadConversationHistoryInfo, 30000);
         });
 
         // Temperature slider handler
@@ -661,6 +903,166 @@
             resetSettings();
         });
 
+        // Refresh server info
+        refreshServerInfoBtn.addEventListener('click', function() {
+            loadServerInfo();
+            loadStats();
+        });
+
+        // View API docs
+        viewApiDocsBtn.addEventListener('click', function() {
+            window.open('http://localhost:8000/docs', '_blank');
+        });
+
+        // Restart server (with optional environment switch)
+        restartServerBtn.addEventListener('click', function() {
+            restartServer();
+        });
+
+        // History length slider handler
+        historyLengthSlider.addEventListener('input', function() {
+            const value = this.value;
+            historyLengthValue.textContent = `${value} ${value === '1' ? 'turn' : 'turns'}`;
+        });
+
+        // Save history settings
+        saveHistoryBtn.addEventListener('click', async function() {
+            const length = parseInt(historyLengthSlider.value);
+            
+            saveHistoryBtn.disabled = true;
+            saveHistoryBtn.textContent = '💾 Saving...';
+
+            try {
+                const response = await fetch(`http://localhost:8000/api/conversation/history/length?length=${length}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                if (response.ok) {
+                    showToast(`Conversation history length set to ${length} turns`, 'success');
+                    loadConversationHistoryInfo();
+                } else {
+                    throw new Error('Failed to update history length');
+                }
+            } catch (error) {
+                console.error('Error updating history length:', error);
+                showToast('Failed to update history length', 'error');
+            } finally {
+                saveHistoryBtn.disabled = false;
+                saveHistoryBtn.textContent = '💾 Save History Settings';
+            }
+        });
+
+        // Clear history button
+        clearHistoryBtn.addEventListener('click', async function() {
+            if (!confirm('Clear conversation history?\n\nThe AI will forget the current conversation context.\nThis cannot be undone.')) {
+                return;
+            }
+
+            clearHistoryBtn.disabled = true;
+            clearHistoryBtn.textContent = '🗑️ Clearing...';
+
+            try {
+                const response = await fetch('http://localhost:8000/api/conversation/history', {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    showToast('Conversation history cleared', 'success');
+                    loadConversationHistoryInfo();
+                } else {
+                    throw new Error('Failed to clear history');
+                }
+            } catch (error) {
+                console.error('Error clearing history:', error);
+                showToast('Failed to clear history', 'error');
+            } finally {
+                clearHistoryBtn.disabled = false;
+                clearHistoryBtn.textContent = '🗑️ Clear Current History';
+            }
+        });
+
+        // Restart server function
+        async function restartServer() {
+            if (!isServerOnline) {
+                showToast('Cannot restart - server is offline', 'error');
+                return;
+            }
+
+            const currentEnv = document.getElementById('dbEnvironment')?.textContent || 'unknown';
+            const selectedEnv = environmentSelector.value;
+            const envChanged = selectedEnv !== currentEnv;
+            
+            let message = 'Restart the server?';
+            if (envChanged) {
+                message = `Switch to ${selectedEnv} environment and restart?\n\nThis will:\n• Save environment setting to .env file\n• Restart the server\n• Connect to ${selectedEnv} database\n\nCurrent: ${currentEnv}\nNew: ${selectedEnv}`;
+            }
+            
+            if (!confirm(message)) {
+                return;
+            }
+
+            restartServerBtn.disabled = true;
+            restartServerBtn.textContent = '🔄 Restarting...';
+
+            try {
+                // If environment changed, switch it first
+                if (envChanged) {
+                    showToast(`Switching to ${selectedEnv} environment...`, 'success');
+                    
+                    const switchResponse = await fetch(`http://localhost:8000/api/environment/switch?environment=${selectedEnv}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    });
+
+                    if (!switchResponse.ok) {
+                        throw new Error('Failed to switch environment');
+                    }
+                    
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                }
+
+                // Now restart
+                const restartResponse = await fetch('http://localhost:8000/api/server/restart', {
+                    method: 'POST'
+                });
+
+                if (restartResponse.ok) {
+                    showToast('Server restarting... Page will reload in 5 seconds', 'success');
+                    isServerOnline = false;
+                    serverOfflineWarning.classList.add('show');
+                    
+                    // Wait for server to restart and reload page
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 5000);
+                } else {
+                    throw new Error('Restart request failed');
+                }
+            } catch (error) {
+                console.error('Restart error:', error);
+                
+                // If we got a network error, server is probably restarting
+                if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                    showToast('Server restarting... Page will reload in 5 seconds', 'success');
+                    isServerOnline = false;
+                    serverOfflineWarning.classList.add('show');
+                    
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 5000);
+                } else {
+                    showToast('Failed to restart: ' + error.message, 'error');
+                    restartServerBtn.disabled = false;
+                    restartServerBtn.textContent = '🔄 Apply & Restart Server';
+                }
+            }
+        }
+
         // Load configuration from API
         async function loadConfig() {
             try {
@@ -668,7 +1070,8 @@
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
-                    }
+                    },
+                    signal: AbortSignal.timeout(5000) // 5 second timeout
                 });
 
                 if (!response.ok) {
@@ -678,21 +1081,28 @@
                 const data = await response.json();
                 currentConfig = data;
                 displayConfig(data);
+                isServerOnline = true;
+                serverOfflineWarning.classList.remove('show');
                 
-                // Also load stats for system info
+                // Also load stats and server info
                 loadStats();
+                loadServerInfo();
 
             } catch (error) {
                 console.error('Error loading config:', error);
-                // Show settings with defaults if API fails
+                isServerOnline = false;
+                serverOfflineWarning.classList.add('show');
+                
+                // Show settings with defaults if API fails (server offline)
                 displayConfig({
-                    model_name: 'llama3.1:latest',
-                    model_host: 'http://localhost:11434/',
+                    model_name: 'Server offline',
+                    model_host: 'Server offline',
                     temperature: 0.7,
                     auto_learn: true,
                     context_retrieval: true
                 });
                 loadStats();
+                loadServerInfo();
             } finally {
                 loadingState.style.display = 'none';
                 settingsContainer.style.display = 'block';
@@ -718,20 +1128,165 @@
         // Load system stats
         async function loadStats() {
             try {
-                const response = await fetch('http://localhost:8000/api/stats');
+                const response = await fetch('http://localhost:8000/api/stats', {
+                    signal: AbortSignal.timeout(5000) // 5 second timeout
+                });
                 if (response.ok) {
                     const data = await response.json();
+                    
+                    // Total memories
                     document.getElementById('totalMemories').textContent = data.total_memories || '0';
-                    document.getElementById('serverStatus').textContent = data.model_info?.status || 'Active';
-                    document.getElementById('ollamaHost').textContent = data.model_info?.host || 'Unknown';
+                    
+                    // Memories by type
+                    const byType = data.memories_by_type || {};
+                    document.getElementById('userFacts').textContent = byType.user_facts || '0';
+                    document.getElementById('preferences').textContent = byType.preferences || '0';
+                    document.getElementById('technical').textContent = byType.technical || '0';
+                    document.getElementById('projects').textContent = byType.projects || '0';
+                    document.getElementById('goals').textContent = byType.goals || '0';
+                    
+                    // Model info
+                    if (data.model_info) {
+                        document.getElementById('activeModel').textContent = data.model_info.name || 'Unknown';
+                        document.getElementById('modelStatus').textContent = data.model_info.status || 'Unknown';
+                    }
+                } else {
+                    throw new Error('Server not responding');
                 }
             } catch (error) {
                 console.error('Error loading stats:', error);
+                
+                // Set offline state for all stats
+                document.getElementById('totalMemories').textContent = 'Server offline';
+                document.getElementById('userFacts').textContent = 'N/A';
+                document.getElementById('preferences').textContent = 'N/A';
+                document.getElementById('technical').textContent = 'N/A';
+                document.getElementById('projects').textContent = 'N/A';
+                document.getElementById('goals').textContent = 'N/A';
+                document.getElementById('activeModel').textContent = 'Server offline';
+                document.getElementById('modelStatus').textContent = 'N/A';
+            }
+        }
+
+        // Load server information
+        async function loadServerInfo() {
+            try {
+                const response = await fetch('http://localhost:8000/api/health', {
+                    signal: AbortSignal.timeout(5000) // 5 second timeout
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Server status
+                    const statusEl = document.getElementById('serverStatus');
+                    if (data.status === 'healthy') {
+                        statusEl.innerHTML = '<span style="color: #22c55e;">● Online</span>';
+                    } else {
+                        statusEl.innerHTML = '<span style="color: #ef4444;">● Error</span>';
+                    }
+                    
+                    // Environment info
+                    document.getElementById('environment').textContent = data.environment || 'Unknown';
+                    document.getElementById('dbEnvironment').textContent = data.environment || 'Unknown';
+                    document.getElementById('databasePath').textContent = data.database_path || 'Unknown';
+                    document.getElementById('databaseType').textContent = data.database_type || 'ChromaDB';
+                    
+                    // Set environment selector
+                    if (data.environment && environmentSelector) {
+                        environmentSelector.value = data.environment;
+                    }
+                    
+                    // Uptime
+                    const uptime = formatUptime(data.uptime_seconds || 0);
+                    document.getElementById('serverUptime').textContent = uptime;
+                    
+                    // Ollama info
+                    document.getElementById('ollamaHost').textContent = data.model_name ? 
+                        (data.model_info?.host || 'http://localhost:11434') : 'Server offline';
+                    
+                    const ollamaStatusEl = document.getElementById('ollamaStatus');
+                    if (data.model_name) {
+                        ollamaStatusEl.innerHTML = '<span style="color: #22c55e;">● Connected</span>';
+                    } else {
+                        ollamaStatusEl.innerHTML = '<span style="color: #ef4444;">● Disconnected</span>';
+                    }
+                    
+                } else {
+                    throw new Error('Server not responding');
+                }
+            } catch (error) {
+                console.error('Error loading server info:', error);
+                
+                // Set offline state for all server-dependent fields
+                document.getElementById('serverStatus').innerHTML = '<span style="color: #ef4444;">● Offline</span>';
+                document.getElementById('environment').textContent = 'Server offline';
+                document.getElementById('dbEnvironment').textContent = 'Server offline';
+                document.getElementById('databasePath').textContent = 'Server offline';
+                document.getElementById('databaseType').textContent = 'Server offline';
+                document.getElementById('serverUptime').textContent = 'N/A';
+                document.getElementById('ollamaHost').textContent = 'Server offline';
+                document.getElementById('ollamaStatus').innerHTML = '<span style="color: #ef4444;">● Server offline</span>';
+            }
+        }
+
+        // Load conversation history info
+        async function loadConversationHistoryInfo() {
+            try {
+                const response = await fetch('http://localhost:8000/api/conversation/history', {
+                    signal: AbortSignal.timeout(5000)
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const currentLength = data.length;
+                    const maxMessages = data.max_length;
+                    const turns = Math.floor(currentLength / 2);
+                    
+                    document.getElementById('currentHistoryLength').textContent = 
+                        `${currentLength} messages (${turns} ${turns === 1 ? 'turn' : 'turns'})`;
+                    document.getElementById('maxHistoryMessages').textContent = `${maxMessages} messages`;
+                    
+                    // Update slider to match current setting
+                    const maxTurns = Math.floor(maxMessages / 2);
+                    if (historyLengthSlider.value != maxTurns) {
+                        historyLengthSlider.value = maxTurns;
+                        historyLengthValue.textContent = `${maxTurns} ${maxTurns === 1 ? 'turn' : 'turns'}`;
+                    }
+                } else {
+                    throw new Error('Failed to load history info');
+                }
+            } catch (error) {
+                console.error('Error loading conversation history info:', error);
+                document.getElementById('currentHistoryLength').textContent = 'Server offline';
+                document.getElementById('maxHistoryMessages').textContent = 'Server offline';
+            }
+        }
+
+        // Format uptime in human-readable format
+        function formatUptime(seconds) {
+            const days = Math.floor(seconds / 86400);
+            const hours = Math.floor((seconds % 86400) / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = Math.floor(seconds % 60);
+            
+            if (days > 0) {
+                return `${days}d ${hours}h ${minutes}m`;
+            } else if (hours > 0) {
+                return `${hours}h ${minutes}m ${secs}s`;
+            } else if (minutes > 0) {
+                return `${minutes}m ${secs}s`;
+            } else {
+                return `${secs}s`;
             }
         }
 
         // Save learning settings
         async function saveLearningSettings() {
+            if (!isServerOnline) {
+                showToast('Cannot save settings - server is offline', 'error');
+                return;
+            }
+
             const config = {
                 temperature: parseFloat(temperatureSlider.value / 100),
                 auto_learn: autoLearningToggle.checked,
@@ -770,6 +1325,11 @@
 
         // Clear all memories
         async function clearAllMemories() {
+            if (!isServerOnline) {
+                showToast('Cannot clear memories - server is offline', 'error');
+                return;
+            }
+
             if (!confirm('⚠️ WARNING: This will delete ALL memories permanently. Are you sure?')) {
                 return;
             }
