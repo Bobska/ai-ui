@@ -1,0 +1,1495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learning Dashboard - My AI Assistant</title>
+    <link rel="stylesheet" href="css/shared.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        header {
+            background-color: #2d2d2d;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            flex-shrink: 0;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        nav {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        nav a {
+            color: #a0a0a0;
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: color 0.2s;
+        }
+
+        nav a:hover, nav a.active {
+            color: #ffffff;
+        }
+
+        /* Main Content */
+        main {
+            flex: 1;
+            padding: 2rem;
+            max-width: 1800px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* Controls Bar */
+        .controls-bar {
+            background-color: #2d2d2d;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .control-group label {
+            font-size: 0.85rem;
+            color: #a0a0a0;
+            font-weight: 500;
+        }
+
+        .control-group select,
+        .control-group input {
+            background-color: #1a1a1a;
+            border: 1px solid #4a4a4a;
+            color: #e0e0e0;
+            padding: 0.5rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            min-width: 150px;
+        }
+
+        .control-group select:focus,
+        .control-group input:focus {
+            outline: none;
+            border-color: #6366f1;
+        }
+
+        .btn {
+            background-color: #6366f1;
+            color: white;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            font-weight: 500;
+        }
+
+        .btn:hover {
+            background-color: #4f46e5;
+        }
+
+        .btn-secondary {
+            background-color: #4a4a4a;
+        }
+
+        .btn-secondary:hover {
+            background-color: #5a5a5a;
+        }
+
+        .btn-success {
+            background-color: #22c55e;
+        }
+
+        .btn-success:hover {
+            background-color: #16a34a;
+        }
+
+        .btn-danger {
+            background-color: #ef4444;
+        }
+
+        .btn-danger:hover {
+            background-color: #dc2626;
+        }
+
+        .btn-sm {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.85rem;
+        }
+
+        /* Overview Cards */
+        .overview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background-color: #2d2d2d;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            transition: transform 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: #a0a0a0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-subtitle {
+            font-size: 0.9rem;
+            color: #6b7280;
+        }
+
+        .stat-card.success .stat-value {
+            color: #22c55e;
+        }
+
+        .stat-card.warning .stat-value {
+            color: #f59e0b;
+        }
+
+        .stat-card.info .stat-value {
+            color: #6366f1;
+        }
+
+        /* Charts Section */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-card {
+            background-color: #2d2d2d;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .chart-card h3 {
+            font-size: 1.1rem;
+            color: #ffffff;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        /* Tables */
+        .table-section {
+            background-color: #2d2d2d;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            margin-bottom: 2rem;
+        }
+
+        .table-section h3 {
+            font-size: 1.1rem;
+            color: #ffffff;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead th {
+            background-color: #1a1a1a;
+            color: #a0a0a0;
+            padding: 0.75rem;
+            text-align: left;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        tbody td {
+            padding: 1rem 0.75rem;
+            border-bottom: 1px solid #3a3a3a;
+        }
+
+        tbody tr {
+            transition: background-color 0.2s;
+            cursor: pointer;
+        }
+
+        tbody tr:hover {
+            background-color: #333333;
+        }
+
+        tbody tr.success {
+            border-left: 3px solid #22c55e;
+        }
+
+        tbody tr.warning {
+            border-left: 3px solid #f59e0b;
+        }
+
+        tbody tr.danger {
+            border-left: 3px solid #ef4444;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge.high {
+            background-color: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .badge.medium {
+            background-color: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+        }
+
+        .badge.low {
+            background-color: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+        }
+
+        .badge.success {
+            background-color: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+        }
+
+        .badge.pending {
+            background-color: rgba(99, 102, 241, 0.2);
+            color: #6366f1;
+        }
+
+        /* Insights Panel */
+        .insights-panel {
+            background-color: #2d2d2d;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            margin-bottom: 2rem;
+        }
+
+        .insights-panel h3 {
+            font-size: 1.1rem;
+            color: #ffffff;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .insight-item {
+            background-color: #1a1a1a;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border-left: 4px solid #6366f1;
+        }
+
+        .insight-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .insight-item.success {
+            border-left-color: #22c55e;
+        }
+
+        .insight-item.warning {
+            border-left-color: #f59e0b;
+        }
+
+        .insight-item.danger {
+            border-left-color: #ef4444;
+        }
+
+        .insight-title {
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .insight-description {
+            color: #a0a0a0;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            animation: fadeIn 0.3s;
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background-color: #2d2d2d;
+            border-radius: 12px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            animation: slideUp 0.3s;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #3a3a3a;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            font-size: 1.3rem;
+            color: #ffffff;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: #a0a0a0;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .close-btn:hover {
+            color: #ffffff;
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .detail-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .detail-section h4 {
+            font-size: 0.95rem;
+            color: #a0a0a0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.75rem;
+        }
+
+        .detail-content {
+            background-color: #1a1a1a;
+            padding: 1rem;
+            border-radius: 8px;
+            color: #e0e0e0;
+            line-height: 1.6;
+        }
+
+        .metrics-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .metric-box {
+            background-color: #1a1a1a;
+            padding: 1rem;
+            border-radius: 8px;
+        }
+
+        .metric-box h5 {
+            font-size: 0.85rem;
+            color: #a0a0a0;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 2rem;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 0.5rem;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background-color: #4a4a4a;
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-bottom: 1.5rem;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -1.4rem;
+            top: 0.3rem;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #6366f1;
+        }
+
+        .timeline-date {
+            font-size: 0.85rem;
+            color: #6366f1;
+            font-weight: 600;
+        }
+
+        .timeline-content {
+            color: #e0e0e0;
+            margin-top: 0.25rem;
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #6366f1;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 999;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .loading-overlay.show {
+            display: flex;
+        }
+
+        .loading-content {
+            text-align: center;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #6366f1;
+            animation: spin 1s ease-in-out infinite;
+            margin: 0 auto 1rem;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #6b7280;
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .empty-state-text {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-state-subtext {
+            font-size: 0.9rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .controls-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .control-group select,
+            .control-group input {
+                width: 100%;
+            }
+
+            .metrics-comparison {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="header-content">
+            <h1>🎯 Learning Dashboard</h1>
+            <nav>
+                <a href="index.html">Home</a>
+                <a href="analysis.html">Analysis</a>
+                <a href="analysis-dashboard.html" class="active">Learning</a>
+                <a href="memories.html">Memories</a>
+                <a href="settings.html">Settings</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        <!-- Controls Bar -->
+        <div class="controls-bar">
+            <div class="control-group">
+                <label>Date Range</label>
+                <select id="dateRangeFilter">
+                    <option value="all">All Time</option>
+                    <option value="7">Last 7 Days</option>
+                    <option value="30" selected>Last 30 Days</option>
+                    <option value="90">Last 90 Days</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>Category</label>
+                <select id="categoryFilter">
+                    <option value="all">All Categories</option>
+                    <option value="Performance">Performance</option>
+                    <option value="Quality">Quality</option>
+                    <option value="Security">Security</option>
+                    <option value="Maintainability">Maintainability</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>Priority</label>
+                <select id="priorityFilter">
+                    <option value="all">All Priorities</option>
+                    <option value="HIGH">High</option>
+                    <option value="MEDIUM">Medium</option>
+                    <option value="LOW">Low</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>Search</label>
+                <input type="text" id="searchInput" placeholder="Search by file name...">
+            </div>
+            <div style="margin-left: auto; display: flex; gap: 0.5rem; align-items: flex-end;">
+                <button class="btn btn-secondary" onclick="exportData()">
+                    📥 Export CSV
+                </button>
+                <button class="btn" onclick="refreshData()">
+                    🔄 Refresh
+                </button>
+            </div>
+        </div>
+
+        <!-- Overview Cards -->
+        <div class="overview-grid">
+            <div class="stat-card info">
+                <div class="stat-label">Total Suggestions</div>
+                <div class="stat-value" id="totalSuggestions">0</div>
+                <div class="stat-subtitle">Generated by analyzer</div>
+            </div>
+            <div class="stat-card success">
+                <div class="stat-label">Applied</div>
+                <div class="stat-value" id="appliedSuggestions">0</div>
+                <div class="stat-subtitle" id="appliedPercentage">0% of total</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Avg Improvement</div>
+                <div class="stat-value" id="avgImprovement">0</div>
+                <div class="stat-subtitle">Out of 100</div>
+            </div>
+            <div class="stat-card success">
+                <div class="stat-label">Success Rate</div>
+                <div class="stat-value" id="successRate">0%</div>
+                <div class="stat-subtitle">Applied & successful</div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="charts-grid">
+            <div class="chart-card">
+                <h3>Success Rate by Category</h3>
+                <div class="chart-container">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <h3>Success Rate by Priority</h3>
+                <div class="chart-container">
+                    <canvas id="priorityChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <h3>Improvement Trend Over Time</h3>
+                <div class="chart-container">
+                    <canvas id="trendChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <h3>Top Performing Patterns</h3>
+                <div class="chart-container">
+                    <canvas id="patternsChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Learning Insights -->
+        <div class="insights-panel" id="insightsPanel">
+            <h3>🧠 Learning Insights & Recommendations</h3>
+            <div id="insightsContent">
+                <div class="empty-state">
+                    <div class="spinner"></div>
+                    <p>Analyzing learning data...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Improvements Table -->
+        <div class="table-section">
+            <h3>📈 Recent Improvements</h3>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>File</th>
+                            <th>Category</th>
+                            <th>Priority</th>
+                            <th>Before</th>
+                            <th>After</th>
+                            <th>Score</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="improvementsTableBody">
+                        <tr>
+                            <td colspan="8">
+                                <div class="empty-state">
+                                    <div class="spinner"></div>
+                                    <p>Loading improvements...</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Pending Suggestions Table -->
+        <div class="table-section">
+            <h3>⏳ Suggestions Pending Action</h3>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Category</th>
+                            <th>Priority</th>
+                            <th>Location</th>
+                            <th>Predicted Success</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pendingTableBody">
+                        <tr>
+                            <td colspan="6">
+                                <div class="empty-state">
+                                    <div class="spinner"></div>
+                                    <p>Loading pending suggestions...</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Detail Modal -->
+    <div class="modal" id="detailModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Suggestion Details</h2>
+                <button class="close-btn" onclick="closeDetailModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Content will be dynamically populated -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <p style="color: #e0e0e0;">Processing...</p>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+        <span class="toast-icon" id="toastIcon">ℹ️</span>
+        <span class="toast-message" id="toastMessage"></span>
+    </div>
+
+    <script src="js/shared.js"></script>
+    <script>
+        // Configuration
+        const API_BASE_URL = 'http://localhost:8000';
+        const REFRESH_INTERVAL = 30000; // 30 seconds
+
+        // Global state
+        let charts = {};
+        let allData = {
+            stats: null,
+            history: [],
+            recommendations: null
+        };
+        let refreshTimer = null;
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeCharts();
+            loadAllData();
+            setupFilters();
+            startAutoRefresh();
+        });
+
+        // Initialize Chart.js charts
+        function initializeCharts() {
+            const chartOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: { color: '#e0e0e0' }
+                    }
+                },
+                scales: {
+                    y: {
+                        ticks: { color: '#a0a0a0' },
+                        grid: { color: '#3a3a3a' }
+                    },
+                    x: {
+                        ticks: { color: '#a0a0a0' },
+                        grid: { color: '#3a3a3a' }
+                    }
+                }
+            };
+
+            // Category Chart
+            const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+            charts.category = new Chart(categoryCtx, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Success Rate %',
+                        data: [],
+                        backgroundColor: 'rgba(34, 197, 94, 0.6)',
+                        borderColor: 'rgba(34, 197, 94, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: chartOptions
+            });
+
+            // Priority Chart
+            const priorityCtx = document.getElementById('priorityChart').getContext('2d');
+            charts.priority = new Chart(priorityCtx, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Success Rate %',
+                        data: [],
+                        backgroundColor: ['rgba(239, 68, 68, 0.6)', 'rgba(245, 158, 11, 0.6)', 'rgba(34, 197, 94, 0.6)'],
+                        borderColor: ['rgba(239, 68, 68, 1)', 'rgba(245, 158, 11, 1)', 'rgba(34, 197, 94, 1)'],
+                        borderWidth: 1
+                    }]
+                },
+                options: chartOptions
+            });
+
+            // Trend Chart
+            const trendCtx = document.getElementById('trendChart').getContext('2d');
+            charts.trend = new Chart(trendCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Improvement Score',
+                        data: [],
+                        borderColor: 'rgba(99, 102, 241, 1)',
+                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: chartOptions
+            });
+
+            // Patterns Chart
+            const patternsCtx = document.getElementById('patternsChart').getContext('2d');
+            charts.patterns = new Chart(patternsCtx, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Success Rate %',
+                        data: [],
+                        backgroundColor: 'rgba(99, 102, 241, 0.6)',
+                        borderColor: 'rgba(99, 102, 241, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    ...chartOptions,
+                    indexAxis: 'y'
+                }
+            });
+        }
+
+        // Load all dashboard data
+        async function loadAllData() {
+            showLoading();
+            try {
+                // Load stats
+                const statsResponse = await fetch(`${API_BASE_URL}/api/learning/stats`);
+                if (statsResponse.ok) {
+                    allData.stats = await statsResponse.json();
+                    updateOverviewCards(allData.stats);
+                    updateCharts(allData.stats);
+                }
+
+                // Load history
+                const historyResponse = await fetch(`${API_BASE_URL}/api/learning/history?limit=100`);
+                if (historyResponse.ok) {
+                    const historyData = await historyResponse.json();
+                    allData.history = historyData.records || [];
+                    updateTables();
+                }
+
+                // Load recommendations
+                const recsResponse = await fetch(`${API_BASE_URL}/api/learning/recommendations`);
+                if (recsResponse.ok) {
+                    allData.recommendations = await recsResponse.json();
+                    updateInsights(allData.recommendations);
+                }
+
+            } catch (error) {
+                console.error('Failed to load data:', error);
+                showToast('Failed to load dashboard data', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Update overview cards
+        function updateOverviewCards(stats) {
+            document.getElementById('totalSuggestions').textContent = stats.total_suggestions || 0;
+            document.getElementById('appliedSuggestions').textContent = stats.applied_suggestions || 0;
+            
+            const appliedPct = stats.total_suggestions > 0 
+                ? Math.round((stats.applied_suggestions / stats.total_suggestions) * 100)
+                : 0;
+            document.getElementById('appliedPercentage').textContent = `${appliedPct}% of total`;
+
+            document.getElementById('avgImprovement').textContent = 
+                (stats.average_improvement_score || 0).toFixed(1);
+            
+            document.getElementById('successRate').textContent = 
+                `${(stats.overall_success_rate || 0).toFixed(1)}%`;
+        }
+
+        // Update charts
+        function updateCharts(stats) {
+            // Category chart
+            const categories = Object.keys(stats.categories || {});
+            const categoryRates = categories.map(cat => {
+                const data = stats.categories[cat];
+                return data.successful > 0 ? (data.successful / data.total) * 100 : 0;
+            });
+            
+            charts.category.data.labels = categories;
+            charts.category.data.datasets[0].data = categoryRates;
+            charts.category.update();
+
+            // Priority chart
+            const priorities = ['HIGH', 'MEDIUM', 'LOW'];
+            const priorityRates = priorities.map(pri => {
+                return stats[`${pri.toLowerCase()}_success_rate`] || 0;
+            });
+            
+            charts.priority.data.labels = priorities;
+            charts.priority.data.datasets[0].data = priorityRates;
+            charts.priority.update();
+
+            // Patterns chart
+            const patterns = stats.best_patterns || [];
+            const topPatterns = patterns.slice(0, 5);
+            
+            charts.patterns.data.labels = topPatterns.map(p => 
+                `${p.category} (${p.priority})`
+            );
+            charts.patterns.data.datasets[0].data = topPatterns.map(p => p.success_rate);
+            charts.patterns.update();
+
+            // Trend chart - use history data
+            updateTrendChart();
+        }
+
+        // Update trend chart from history
+        function updateTrendChart() {
+            const successful = allData.history.filter(r => r.success && r.improvement_score);
+            const sorted = successful.sort((a, b) => 
+                new Date(a.timestamp) - new Date(b.timestamp)
+            );
+
+            const dates = sorted.map(r => {
+                const date = new Date(r.timestamp);
+                return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            });
+            const scores = sorted.map(r => r.improvement_score);
+
+            charts.trend.data.labels = dates;
+            charts.trend.data.datasets[0].data = scores;
+            charts.trend.update();
+        }
+
+        // Update tables
+        function updateTables() {
+            updateImprovementsTable();
+            updatePendingTable();
+        }
+
+        // Update improvements table
+        function updateImprovementsTable() {
+            const tbody = document.getElementById('improvementsTableBody');
+            
+            const applied = allData.history.filter(r => r.applied);
+            
+            if (applied.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">📊</div>
+                                <div class="empty-state-text">No improvements recorded yet</div>
+                                <div class="empty-state-subtext">Applied suggestions will appear here</div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = applied.map(record => {
+                const date = new Date(record.timestamp).toLocaleDateString();
+                const score = record.improvement_score || 0;
+                const statusClass = score > 50 ? 'success' : score < 50 ? 'danger' : 'warning';
+                const statusText = record.success ? 'Success' : record.success === false ? 'Regression' : 'Unknown';
+                
+                return `
+                    <tr class="${statusClass}" onclick="showDetail('${record.suggestion_id}')">
+                        <td>${date}</td>
+                        <td>${getFileName(record.issue.location)}</td>
+                        <td>${record.issue.category}</td>
+                        <td><span class="badge ${record.issue.priority.toLowerCase()}">${record.issue.priority}</span></td>
+                        <td>${formatMetric(record.before_metrics)}</td>
+                        <td>${formatMetric(record.after_metrics)}</td>
+                        <td><strong>${score.toFixed(1)}</strong></td>
+                        <td><span class="badge ${statusClass}">${statusText}</span></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Update pending table
+        function updatePendingTable() {
+            const tbody = document.getElementById('pendingTableBody');
+            
+            const pending = allData.history.filter(r => !r.applied);
+            
+            if (pending.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">✨</div>
+                                <div class="empty-state-text">All caught up!</div>
+                                <div class="empty-state-subtext">No pending suggestions</div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = pending.map(record => {
+                const predictedRate = getPredictedSuccessRate(record.issue.category);
+                const confidence = predictedRate > 60 ? 'high' : predictedRate > 30 ? 'medium' : 'low';
+                
+                return `
+                    <tr>
+                        <td>${record.issue.title}</td>
+                        <td>${record.issue.category}</td>
+                        <td><span class="badge ${record.issue.priority.toLowerCase()}">${record.issue.priority}</span></td>
+                        <td>${record.issue.location}</td>
+                        <td>
+                            <span class="badge ${confidence}">${predictedRate.toFixed(0)}%</span>
+                        </td>
+                        <td>
+                            <button class="btn btn-success btn-sm" onclick="markAsApplied('${record.suggestion_id}')">
+                                ✓ Applied
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="markAsRejected('${record.suggestion_id}')">
+                                ✗ Reject
+                            </button>
+                            <button class="btn btn-sm" onclick="showDetail('${record.suggestion_id}')">
+                                👁 View
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Update insights panel
+        function updateInsights(recommendations) {
+            const container = document.getElementById('insightsContent');
+            
+            if (!recommendations || !recommendations.recommendations.length) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">💡</div>
+                        <div class="empty-state-text">Not enough data for insights</div>
+                        <div class="empty-state-subtext">Apply more suggestions to get recommendations</div>
+                    </div>
+                `;
+                return;
+            }
+
+            const insights = recommendations.recommendations.map(rec => {
+                const typeClass = rec.type === 'focus' ? 'success' : 
+                                rec.type === 'avoid' ? 'danger' : 
+                                rec.type === 'warning' ? 'warning' : '';
+                
+                const icon = rec.type === 'focus' ? '🎯' :
+                           rec.type === 'avoid' ? '⚠️' :
+                           rec.type === 'warning' ? '⚡' :
+                           rec.type === 'insight' ? '💡' : 'ℹ️';
+                
+                return `
+                    <div class="insight-item ${typeClass}">
+                        <div class="insight-title">
+                            <span>${icon}</span>
+                            <span>${rec.category || rec.message || 'Recommendation'}</span>
+                        </div>
+                        <div class="insight-description">
+                            ${rec.reason || rec.message}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = insights;
+        }
+
+        // Show detail modal
+        async function showDetail(suggestionId) {
+            showLoading();
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/learning/suggestions/${suggestionId}`);
+                if (!response.ok) throw new Error('Failed to load suggestion');
+                
+                const data = await response.json();
+                displayDetailModal(data);
+                
+            } catch (error) {
+                console.error('Failed to load suggestion:', error);
+                showToast('Failed to load suggestion details', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Display detail modal
+        function displayDetailModal(data) {
+            const modalBody = document.getElementById('modalBody');
+            
+            const appliedDate = data.applied_date ? 
+                new Date(data.applied_date).toLocaleString() : 'Not applied';
+            
+            modalBody.innerHTML = `
+                <div class="detail-section">
+                    <h4>Issue Information</h4>
+                    <div class="detail-content">
+                        <p><strong>Category:</strong> ${data.issue.category}</p>
+                        <p><strong>Priority:</strong> <span class="badge ${data.issue.priority.toLowerCase()}">${data.issue.priority}</span></p>
+                        <p><strong>Location:</strong> ${data.issue.location}</p>
+                        <p><strong>Description:</strong> ${data.issue.description}</p>
+                        <p><strong>Impact:</strong> ${data.issue.impact}</p>
+                        <p><strong>Estimated Improvement:</strong> ${data.issue.estimated_improvement}</p>
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <h4>Copilot Prompt</h4>
+                    <div class="detail-content">
+                        <code>${data.copilot_prompt}</code>
+                    </div>
+                </div>
+
+                ${data.before_metrics && data.after_metrics ? `
+                    <div class="detail-section">
+                        <h4>Metrics Comparison</h4>
+                        <div class="metrics-comparison">
+                            <div class="metric-box">
+                                <h5>Before</h5>
+                                <div class="metric-value">${data.before_metrics.complexity || 'N/A'}</div>
+                                <small>Complexity</small>
+                            </div>
+                            <div class="metric-box">
+                                <h5>After</h5>
+                                <div class="metric-value" style="color: #22c55e;">
+                                    ${data.after_metrics.complexity || 'N/A'}
+                                </div>
+                                <small>Complexity</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="detail-section">
+                        <h4>Improvement Score</h4>
+                        <div class="detail-content">
+                            <div style="font-size: 2rem; font-weight: bold; color: ${data.improvement_score > 50 ? '#22c55e' : '#ef4444'};">
+                                ${(data.improvement_score || 0).toFixed(1)} / 100
+                            </div>
+                        </div>
+                    </div>
+                ` : ''}
+
+                ${data.user_feedback ? `
+                    <div class="detail-section">
+                        <h4>User Feedback</h4>
+                        <div class="detail-content">
+                            ${data.user_feedback}
+                        </div>
+                    </div>
+                ` : ''}
+
+                <div class="detail-section">
+                    <h4>Timeline</h4>
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-date">${new Date(data.timestamp).toLocaleString()}</div>
+                            <div class="timeline-content">Suggestion recorded</div>
+                        </div>
+                        ${data.applied ? `
+                            <div class="timeline-item">
+                                <div class="timeline-date">${appliedDate}</div>
+                                <div class="timeline-content">Marked as applied</div>
+                            </div>
+                        ` : ''}
+                        ${data.improvement_score ? `
+                            <div class="timeline-item">
+                                <div class="timeline-date">${appliedDate}</div>
+                                <div class="timeline-content">Outcome measured</div>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('detailModal').classList.add('show');
+        }
+
+        // Close detail modal
+        function closeDetailModal() {
+            document.getElementById('detailModal').classList.remove('show');
+        }
+
+        // Mark suggestion as applied
+        async function markAsApplied(suggestionId) {
+            const feedback = prompt('Optional feedback:');
+            
+            showLoading();
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/learning/apply`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        suggestion_id: suggestionId,
+                        applied: true,
+                        feedback: feedback || undefined
+                    })
+                });
+
+                if (!response.ok) throw new Error('Failed to mark as applied');
+                
+                showToast('Suggestion marked as applied! Remember to measure outcome.', 'success');
+                await loadAllData();
+                
+            } catch (error) {
+                console.error('Failed to mark as applied:', error);
+                showToast('Failed to update suggestion', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Mark suggestion as rejected
+        async function markAsRejected(suggestionId) {
+            const feedback = prompt('Why was this rejected?');
+            if (!feedback) return;
+            
+            showLoading();
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/learning/apply`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        suggestion_id: suggestionId,
+                        applied: false,
+                        feedback: feedback
+                    })
+                });
+
+                if (!response.ok) throw new Error('Failed to mark as rejected');
+                
+                showToast('Suggestion marked as rejected', 'success');
+                await loadAllData();
+                
+            } catch (error) {
+                console.error('Failed to mark as rejected:', error);
+                showToast('Failed to update suggestion', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Export data as CSV
+        function exportData() {
+            const csv = convertToCSV(allData.history);
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `learning-data-${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            showToast('Data exported successfully', 'success');
+        }
+
+        // Convert data to CSV
+        function convertToCSV(data) {
+            const headers = ['Date', 'Category', 'Priority', 'Title', 'Applied', 'Success', 'Score', 'Feedback'];
+            const rows = data.map(r => [
+                new Date(r.timestamp).toISOString(),
+                r.issue.category,
+                r.issue.priority,
+                r.issue.title,
+                r.applied,
+                r.success,
+                r.improvement_score || '',
+                r.user_feedback || ''
+            ]);
+            
+            return [headers, ...rows].map(row => row.join(',')).join('\n');
+        }
+
+        // Refresh data
+        async function refreshData() {
+            await loadAllData();
+            showToast('Dashboard refreshed', 'success');
+        }
+
+        // Setup filters
+        function setupFilters() {
+            document.getElementById('dateRangeFilter').addEventListener('change', applyFilters);
+            document.getElementById('categoryFilter').addEventListener('change', applyFilters);
+            document.getElementById('priorityFilter').addEventListener('change', applyFilters);
+            document.getElementById('searchInput').addEventListener('input', applyFilters);
+        }
+
+        // Apply filters
+        function applyFilters() {
+            // Filters would affect the API calls in a real implementation
+            // For now, just reload data
+            loadAllData();
+        }
+
+        // Start auto-refresh
+        function startAutoRefresh() {
+            refreshTimer = setInterval(refreshData, REFRESH_INTERVAL);
+        }
+
+        // Helper functions
+        function getFileName(location) {
+            return location.split(':')[0].split('/').pop();
+        }
+
+        function formatMetric(metrics) {
+            if (!metrics) return 'N/A';
+            return `C: ${metrics.complexity || 0}`;
+        }
+
+        function getPredictedSuccessRate(category) {
+            if (!allData.stats || !allData.stats.categories[category]) return 50;
+            const cat = allData.stats.categories[category];
+            return cat.total > 0 ? (cat.successful / cat.total) * 100 : 50;
+        }
+
+        function showLoading() {
+            document.getElementById('loadingOverlay').classList.add('show');
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingOverlay').classList.remove('show');
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toastIcon');
+            const msg = document.getElementById('toastMessage');
+            
+            toast.className = 'toast ' + type;
+            icon.textContent = type === 'success' ? '✓' : type === 'error' ? '✗' : 'ℹ';
+            msg.textContent = message;
+            
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // Close modal on outside click
+        document.getElementById('detailModal').addEventListener('click', (e) => {
+            if (e.target.id === 'detailModal') {
+                closeDetailModal();
+            }
+        });
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (refreshTimer) clearInterval(refreshTimer);
+        });
+    </script>
+</body>
+</html>
