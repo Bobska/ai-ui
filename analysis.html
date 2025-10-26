@@ -1,0 +1,1530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Analysis - My AI Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        header {
+            background-color: #2d2d2d;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            flex-shrink: 0;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        nav {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        nav a {
+            color: #b0b0b0;
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: color 0.2s;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+        }
+
+        nav a:hover {
+            color: #ffffff;
+            background-color: #3a3a3a;
+        }
+
+        nav a.active {
+            color: #4a9eff;
+            font-weight: 500;
+        }
+
+        /* Main Container */
+        main {
+            flex: 1;
+            max-width: 1600px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Control Panel */
+        .control-panel {
+            background-color: #2d2d2d;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .control-row {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-end;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        .control-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .form-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            color: #b0b0b0;
+            font-weight: 500;
+        }
+
+        .form-group input[type="text"] {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: #1a1a1a;
+            border: 1px solid #3a3a3a;
+            border-radius: 6px;
+            color: #e0e0e0;
+            font-size: 0.95rem;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input[type="text"]:focus {
+            outline: none;
+            border-color: #4a9eff;
+        }
+
+        .mode-toggle {
+            display: flex;
+            background-color: #1a1a1a;
+            border-radius: 6px;
+            padding: 0.25rem;
+        }
+
+        .mode-toggle button {
+            padding: 0.5rem 1rem;
+            background-color: transparent;
+            border: none;
+            color: #b0b0b0;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .mode-toggle button.active {
+            background-color: #4a9eff;
+            color: #ffffff;
+        }
+
+        .mode-toggle button:hover:not(.active) {
+            background-color: #3a3a3a;
+            color: #ffffff;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background-color: #4a9eff;
+            color: #ffffff;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background-color: #3a8ae0;
+        }
+
+        .btn-secondary {
+            background-color: #3a3a3a;
+            color: #e0e0e0;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background-color: #4a4a4a;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        /* Status Bar */
+        .status-bar {
+            background-color: #2d2d2d;
+            border-radius: 8px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 2rem;
+            display: none;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .status-bar.show {
+            display: flex;
+        }
+
+        .status-bar.loading {
+            border-left: 4px solid #4a9eff;
+        }
+
+        .status-bar.success {
+            border-left: 4px solid #10b981;
+        }
+
+        .status-bar.error {
+            border-left: 4px solid #ef4444;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #3a3a3a;
+            border-top-color: #4a9eff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .status-text {
+            flex: 1;
+            font-size: 0.9rem;
+        }
+
+        /* Summary Cards */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .summary-card {
+            background-color: #2d2d2d;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .summary-card h3 {
+            font-size: 0.85rem;
+            color: #b0b0b0;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .summary-card .value {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .summary-card .label {
+            font-size: 0.85rem;
+            color: #808080;
+            margin-top: 0.25rem;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid #3a3a3a;
+        }
+
+        .tab {
+            padding: 0.75rem 1.5rem;
+            background-color: transparent;
+            border: none;
+            color: #b0b0b0;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            font-size: 0.95rem;
+        }
+
+        .tab:hover {
+            color: #ffffff;
+        }
+
+        .tab.active {
+            color: #4a9eff;
+            border-bottom-color: #4a9eff;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Filters */
+        .filters {
+            background-color: #2d2d2d;
+            border-radius: 8px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .filter-group label {
+            font-size: 0.9rem;
+            color: #b0b0b0;
+        }
+
+        .filter-group select {
+            padding: 0.5rem;
+            background-color: #1a1a1a;
+            border: 1px solid #3a3a3a;
+            border-radius: 6px;
+            color: #e0e0e0;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        .filter-group select:focus {
+            outline: none;
+            border-color: #4a9eff;
+        }
+
+        /* Issue Cards */
+        .issues-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .issue-card {
+            background-color: #2d2d2d;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            border-left: 4px solid #3a3a3a;
+            transition: all 0.2s;
+        }
+
+        .issue-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .issue-card.priority-HIGH {
+            border-left-color: #ef4444;
+        }
+
+        .issue-card.priority-MEDIUM {
+            border-left-color: #f59e0b;
+        }
+
+        .issue-card.priority-LOW {
+            border-left-color: #10b981;
+        }
+
+        .issue-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+            gap: 1rem;
+        }
+
+        .issue-title-section {
+            flex: 1;
+        }
+
+        .issue-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+        }
+
+        .issue-location {
+            font-size: 0.85rem;
+            color: #808080;
+            font-family: 'Courier New', monospace;
+        }
+
+        .issue-badges {
+            display: flex;
+            gap: 0.5rem;
+            flex-shrink: 0;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-priority-HIGH {
+            background-color: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .badge-priority-MEDIUM {
+            background-color: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+        }
+
+        .badge-priority-LOW {
+            background-color: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+
+        .badge-category {
+            background-color: rgba(74, 158, 255, 0.2);
+            color: #4a9eff;
+        }
+
+        .issue-content {
+            margin-bottom: 1rem;
+        }
+
+        .issue-description {
+            font-size: 0.95rem;
+            color: #e0e0e0;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .issue-meta {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            padding: 1rem;
+            background-color: #1a1a1a;
+            border-radius: 6px;
+        }
+
+        .meta-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .meta-label {
+            font-size: 0.8rem;
+            color: #808080;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .meta-value {
+            font-size: 0.9rem;
+            color: #e0e0e0;
+        }
+
+        .prompt-section {
+            margin-top: 1rem;
+            border-top: 1px solid #3a3a3a;
+            padding-top: 1rem;
+        }
+
+        .prompt-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 6px;
+            transition: background-color 0.2s;
+        }
+
+        .prompt-header:hover {
+            background-color: #3a3a3a;
+        }
+
+        .prompt-header h4 {
+            font-size: 0.9rem;
+            color: #4a9eff;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .prompt-toggle {
+            font-size: 0.75rem;
+            color: #808080;
+        }
+
+        .prompt-content {
+            display: none;
+            background-color: #1a1a1a;
+            border-radius: 6px;
+            padding: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        .prompt-content.show {
+            display: block;
+        }
+
+        .prompt-text {
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            color: #e0e0e0;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .prompt-actions {
+            margin-top: 1rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-small {
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+        }
+
+        /* Comparison View */
+        .comparison-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .comparison-column {
+            background-color: #2d2d2d;
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+
+        .comparison-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #3a3a3a;
+        }
+
+        .comparison-header h3 {
+            font-size: 1.1rem;
+            color: #ffffff;
+        }
+
+        .comparison-stats {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #b0b0b0;
+        }
+
+        .stat-value {
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .agreement-indicator {
+            background-color: #1a1a1a;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .agreement-score {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #4a9eff;
+            margin-bottom: 0.5rem;
+        }
+
+        .agreement-label {
+            font-size: 0.9rem;
+            color: #b0b0b0;
+        }
+
+        .comparison-issues {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .comparison-issue {
+            background-color: #1a1a1a;
+            border-radius: 6px;
+            padding: 1rem;
+            border-left: 3px solid #3a3a3a;
+        }
+
+        .comparison-issue.common {
+            border-left-color: #10b981;
+            background-color: rgba(16, 185, 129, 0.05);
+        }
+
+        .comparison-issue.unique {
+            border-left-color: #f59e0b;
+            background-color: rgba(245, 158, 11, 0.05);
+        }
+
+        .comparison-issue-title {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #ffffff;
+            margin-bottom: 0.25rem;
+        }
+
+        .comparison-issue-category {
+            font-size: 0.8rem;
+            color: #808080;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            background-color: #2d2d2d;
+            border-radius: 12px;
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.3;
+        }
+
+        .empty-state h3 {
+            font-size: 1.2rem;
+            color: #b0b0b0;
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-state p {
+            font-size: 0.95rem;
+            color: #808080;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        /* Copy Notification */
+        .copy-notification {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background-color: #10b981;
+            color: #ffffff;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            display: none;
+            align-items: center;
+            gap: 0.5rem;
+            animation: slideUp 0.3s ease-out;
+            z-index: 1000;
+        }
+
+        .copy-notification.show {
+            display: flex;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            main {
+                padding: 1rem;
+            }
+
+            .control-row {
+                flex-direction: column;
+            }
+
+            .comparison-container {
+                grid-template-columns: 1fr;
+            }
+
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .issue-header {
+                flex-direction: column;
+            }
+
+            .issue-badges {
+                width: 100%;
+            }
+        }
+
+        /* Auto-refresh indicator */
+        .auto-refresh {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background-color: #1a1a1a;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            color: #b0b0b0;
+        }
+
+        .auto-refresh.active {
+            color: #10b981;
+        }
+
+        .refresh-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #808080;
+        }
+
+        .auto-refresh.active .refresh-dot {
+            background-color: #10b981;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="header-content">
+            <h1>🔍 Code Analysis</h1>
+            <nav>
+                <a href="index.html">Chat</a>
+                <a href="memories.html">Memories</a>
+                <a href="analysis.html" class="active">Analysis</a>
+                <a href="suggestions.html">Suggestions</a>
+                <a href="debug.html">Debug</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        <!-- Control Panel -->
+        <div class="control-panel">
+            <div class="control-row">
+                <div class="form-group" style="flex: 2;">
+                    <label for="filePath">File Path</label>
+                    <input type="text" id="filePath" placeholder="C:\dev-projects\ai\api_server.py">
+                </div>
+                <div class="form-group">
+                    <label>Analysis Mode</label>
+                    <div class="mode-toggle">
+                        <button id="modeSingle" class="mode-btn" data-mode="single">Single Analyzer</button>
+                        <button id="modeDual" class="mode-btn active" data-mode="dual">Dual Analyzer</button>
+                    </div>
+                </div>
+            </div>
+            <div class="control-row">
+                <div class="btn-group">
+                    <button id="runAnalysisBtn" class="btn btn-primary">
+                        ▶️ Run Analysis
+                    </button>
+                    <button id="compareBtn" class="btn btn-secondary">
+                        ⚖️ Compare
+                    </button>
+                    <button id="exportPromptsBtn" class="btn btn-secondary" disabled>
+                        📥 Export Prompts
+                    </button>
+                </div>
+                <div class="auto-refresh" id="autoRefreshIndicator">
+                    <span class="refresh-dot"></span>
+                    <span id="autoRefreshText">Auto-refresh: Off</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Bar -->
+        <div id="statusBar" class="status-bar">
+            <div class="spinner"></div>
+            <div class="status-text" id="statusText">Analyzing code...</div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div id="summarySection" style="display: none;">
+            <div class="summary-grid">
+                <div class="summary-card">
+                    <h3>Total Issues</h3>
+                    <div class="value" id="totalIssues">0</div>
+                    <div class="label">Found</div>
+                </div>
+                <div class="summary-card">
+                    <h3>High Priority</h3>
+                    <div class="value" id="highPriority" style="color: #ef4444;">0</div>
+                    <div class="label">Critical</div>
+                </div>
+                <div class="summary-card">
+                    <h3>Medium Priority</h3>
+                    <div class="value" id="mediumPriority" style="color: #f59e0b;">0</div>
+                    <div class="label">Moderate</div>
+                </div>
+                <div class="summary-card">
+                    <h3>Low Priority</h3>
+                    <div class="value" id="lowPriority" style="color: #10b981;">0</div>
+                    <div class="label">Minor</div>
+                </div>
+                <div class="summary-card">
+                    <h3>Analysis Time</h3>
+                    <div class="value" id="analysisTime">0.0s</div>
+                    <div class="label">Duration</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div id="resultsTabs" style="display: none;">
+            <div class="tabs">
+                <button class="tab active" data-tab="issues">Issues</button>
+                <button class="tab" data-tab="prompts">Prompts</button>
+                <button class="tab" data-tab="comparison">Comparison</button>
+            </div>
+
+            <!-- Issues Tab -->
+            <div id="issuesTab" class="tab-content active">
+                <div class="filters">
+                    <div class="filter-group">
+                        <label for="priorityFilter">Priority:</label>
+                        <select id="priorityFilter">
+                            <option value="ALL">All Priorities</option>
+                            <option value="HIGH">High</option>
+                            <option value="MEDIUM">Medium</option>
+                            <option value="LOW">Low</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="categoryFilter">Category:</label>
+                        <select id="categoryFilter">
+                            <option value="ALL">All Categories</option>
+                            <option value="Performance">Performance</option>
+                            <option value="Code Quality">Code Quality</option>
+                            <option value="Architecture">Architecture</option>
+                            <option value="Security">Security</option>
+                            <option value="Maintainability">Maintainability</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Count: <span id="filteredCount">0</span></label>
+                    </div>
+                </div>
+                <div id="issuesContainer" class="issues-container"></div>
+            </div>
+
+            <!-- Prompts Tab -->
+            <div id="promptsTab" class="tab-content">
+                <div class="filters">
+                    <div class="filter-group">
+                        <label for="promptPriorityFilter">Priority:</label>
+                        <select id="promptPriorityFilter">
+                            <option value="ALL">All</option>
+                            <option value="HIGH">High</option>
+                            <option value="MEDIUM">Medium</option>
+                            <option value="LOW">Low</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="promptFormatFilter">Format:</label>
+                        <select id="promptFormatFilter">
+                            <option value="markdown">Markdown</option>
+                            <option value="plain">Plain Text</option>
+                            <option value="json">JSON</option>
+                        </select>
+                    </div>
+                    <div class="btn-group">
+                        <button id="loadPromptsBtn" class="btn btn-primary btn-small">Load Prompts</button>
+                        <button id="copyAllPromptsBtn" class="btn btn-secondary btn-small" disabled>Copy All</button>
+                    </div>
+                </div>
+                <div id="promptsContainer" class="issues-container"></div>
+            </div>
+
+            <!-- Comparison Tab -->
+            <div id="comparisonTab" class="tab-content">
+                <div id="comparisonContainer"></div>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="empty-state">
+            <div class="empty-state-icon">📊</div>
+            <h3>No Analysis Results</h3>
+            <p>Enter a file path above and click "Run Analysis" to analyze your Python code for potential issues and improvements.</p>
+        </div>
+    </main>
+
+    <!-- Copy Notification -->
+    <div id="copyNotification" class="copy-notification">
+        <span>✓</span>
+        <span>Copied to clipboard!</span>
+    </div>
+
+    <script>
+        // API Configuration
+        const API_BASE = 'http://localhost:8000/api/analyze';
+        
+        // State
+        let currentAnalysisId = null;
+        let currentMode = 'dual';
+        let allIssues = [];
+        let autoRefreshInterval = null;
+        let comparisonData = null;
+
+        // DOM Elements
+        const filePathInput = document.getElementById('filePath');
+        const runAnalysisBtn = document.getElementById('runAnalysisBtn');
+        const compareBtn = document.getElementById('compareBtn');
+        const exportPromptsBtn = document.getElementById('exportPromptsBtn');
+        const statusBar = document.getElementById('statusBar');
+        const statusText = document.getElementById('statusText');
+        const summarySection = document.getElementById('summarySection');
+        const resultsTabs = document.getElementById('resultsTabs');
+        const emptyState = document.getElementById('emptyState');
+        const issuesContainer = document.getElementById('issuesContainer');
+        const promptsContainer = document.getElementById('promptsContainer');
+        const comparisonContainer = document.getElementById('comparisonContainer');
+        const priorityFilter = document.getElementById('priorityFilter');
+        const categoryFilter = document.getElementById('categoryFilter');
+        const filteredCount = document.getElementById('filteredCount');
+        const autoRefreshIndicator = document.getElementById('autoRefreshIndicator');
+        const autoRefreshText = document.getElementById('autoRefreshText');
+        const copyNotification = document.getElementById('copyNotification');
+
+        // Mode Toggle
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentMode = btn.dataset.mode;
+            });
+        });
+
+        // Tab Switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabName = tab.dataset.tab;
+                
+                // Update active tab
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                // Update active content
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                document.getElementById(tabName + 'Tab').classList.add('active');
+            });
+        });
+
+        // Run Analysis
+        runAnalysisBtn.addEventListener('click', async () => {
+            const filePath = filePathInput.value.trim();
+            
+            if (!filePath) {
+                showStatus('error', 'Please enter a file path');
+                return;
+            }
+
+            await runAnalysis(filePath, currentMode);
+        });
+
+        // Compare Analyzers
+        compareBtn.addEventListener('click', async () => {
+            const filePath = filePathInput.value.trim();
+            
+            if (!filePath) {
+                showStatus('error', 'Please enter a file path');
+                return;
+            }
+
+            await runComparison(filePath);
+        });
+
+        // Export Prompts
+        exportPromptsBtn.addEventListener('click', async () => {
+            if (!currentAnalysisId) return;
+            
+            const priority = document.getElementById('promptPriorityFilter').value;
+            const format = document.getElementById('promptFormatFilter').value;
+            
+            try {
+                const response = await fetch(`${API_BASE}/prompts/${currentAnalysisId}?priority_filter=${priority}&output_format=${format}`);
+                
+                if (!response.ok) throw new Error('Failed to fetch prompts');
+                
+                const data = await response.json();
+                
+                // Create download
+                const content = data.prompts.join('\n\n---\n\n');
+                const blob = new Blob([content], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `prompts_${currentAnalysisId}.txt`;
+                a.click();
+                URL.revokeObjectURL(url);
+                
+                showCopyNotification('Prompts exported!');
+            } catch (error) {
+                console.error('Export error:', error);
+                showStatus('error', `Export failed: ${error.message}`);
+            }
+        });
+
+        // Load Prompts Button
+        document.getElementById('loadPromptsBtn').addEventListener('click', async () => {
+            if (!currentAnalysisId) return;
+            
+            const priority = document.getElementById('promptPriorityFilter').value;
+            const format = document.getElementById('promptFormatFilter').value;
+            
+            await loadPrompts(currentAnalysisId, priority, format);
+        });
+
+        // Copy All Prompts
+        document.getElementById('copyAllPromptsBtn').addEventListener('click', () => {
+            const prompts = Array.from(document.querySelectorAll('.prompt-text'))
+                .map(el => el.textContent)
+                .join('\n\n---\n\n');
+            
+            copyToClipboard(prompts);
+        });
+
+        // Filters
+        priorityFilter.addEventListener('change', filterIssues);
+        categoryFilter.addEventListener('change', filterIssues);
+
+        // API Functions
+        async function runAnalysis(filePath, mode) {
+            showStatus('loading', 'Running analysis...');
+            hideEmptyState();
+            
+            try {
+                const response = await fetch(`${API_BASE}/file`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        file_path: filePath,
+                        analyzer_mode: mode
+                    })
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Analysis failed');
+                }
+                
+                const data = await response.json();
+                currentAnalysisId = data.analysis_id;
+                allIssues = data.issues;
+                
+                displayResults(data);
+                showStatus('success', `Analysis complete! Found ${data.issue_count} issues`);
+                
+                setTimeout(() => hideStatus(), 3000);
+                
+            } catch (error) {
+                console.error('Analysis error:', error);
+                showStatus('error', `Error: ${error.message}`);
+                showEmptyState();
+            }
+        }
+
+        async function runComparison(filePath) {
+            showStatus('loading', 'Running dual analysis comparison...');
+            hideEmptyState();
+            
+            try {
+                const response = await fetch(`${API_BASE}/compare`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ file_path: filePath })
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Comparison failed');
+                }
+                
+                const data = await response.json();
+                currentAnalysisId = data.analysis_id;
+                comparisonData = data;
+                
+                // Display in comparison tab
+                displayComparison(data);
+                
+                // Switch to comparison tab
+                document.querySelector('.tab[data-tab="comparison"]').click();
+                
+                showStatus('success', `Comparison complete! ${data.agreement_score.toFixed(1)}% agreement`);
+                setTimeout(() => hideStatus(), 3000);
+                
+            } catch (error) {
+                console.error('Comparison error:', error);
+                showStatus('error', `Error: ${error.message}`);
+                showEmptyState();
+            }
+        }
+
+        async function loadPrompts(analysisId, priority, format) {
+            showStatus('loading', 'Generating prompts...');
+            
+            try {
+                const response = await fetch(`${API_BASE}/prompts/${analysisId}?priority_filter=${priority}&output_format=${format}`);
+                
+                if (!response.ok) throw new Error('Failed to load prompts');
+                
+                const data = await response.json();
+                
+                displayPrompts(data);
+                showStatus('success', `Loaded ${data.prompt_count} prompts`);
+                setTimeout(() => hideStatus(), 2000);
+                
+            } catch (error) {
+                console.error('Load prompts error:', error);
+                showStatus('error', `Error: ${error.message}`);
+            }
+        }
+
+        // Display Functions
+        function displayResults(data) {
+            // Update summary
+            document.getElementById('totalIssues').textContent = data.issue_count;
+            document.getElementById('highPriority').textContent = data.high_priority_count;
+            
+            const mediumCount = data.issues.filter(i => i.priority === 'MEDIUM').length;
+            const lowCount = data.issues.filter(i => i.priority === 'LOW').length;
+            
+            document.getElementById('mediumPriority').textContent = mediumCount;
+            document.getElementById('lowPriority').textContent = lowCount;
+            document.getElementById('analysisTime').textContent = data.analysis_duration.toFixed(2) + 's';
+            
+            // Show summary and tabs
+            summarySection.style.display = 'block';
+            resultsTabs.style.display = 'block';
+            exportPromptsBtn.disabled = false;
+            
+            // Display issues
+            displayIssues(data.issues);
+            
+            // Reset filters
+            priorityFilter.value = 'ALL';
+            categoryFilter.value = 'ALL';
+        }
+
+        function displayIssues(issues) {
+            issuesContainer.innerHTML = '';
+            
+            if (issues.length === 0) {
+                issuesContainer.innerHTML = '<div class="empty-state"><div class="empty-state-icon">✅</div><h3>No Issues Found</h3><p>Great job! The analysis didn\'t find any issues.</p></div>';
+                filteredCount.textContent = '0';
+                return;
+            }
+            
+            filteredCount.textContent = issues.length;
+            
+            issues.forEach((issue, index) => {
+                const card = createIssueCard(issue, index);
+                issuesContainer.appendChild(card);
+            });
+        }
+
+        function createIssueCard(issue, index) {
+            const card = document.createElement('div');
+            card.className = `issue-card priority-${issue.priority}`;
+            card.dataset.priority = issue.priority;
+            card.dataset.category = issue.category;
+            
+            card.innerHTML = `
+                <div class="issue-header">
+                    <div class="issue-title-section">
+                        <div class="issue-title">${escapeHtml(issue.title)}</div>
+                        <div class="issue-location">${escapeHtml(issue.location)}</div>
+                    </div>
+                    <div class="issue-badges">
+                        <span class="badge badge-priority-${issue.priority}">${issue.priority}</span>
+                        <span class="badge badge-category">${escapeHtml(issue.category)}</span>
+                    </div>
+                </div>
+                <div class="issue-content">
+                    <div class="issue-description">${escapeHtml(issue.description)}</div>
+                    <div class="issue-meta">
+                        <div class="meta-item">
+                            <div class="meta-label">Impact</div>
+                            <div class="meta-value">${escapeHtml(issue.impact)}</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-label">Improvement</div>
+                            <div class="meta-value">${escapeHtml(issue.estimated_improvement)}</div>
+                        </div>
+                    </div>
+                </div>
+                ${issue.copilot_prompt ? `
+                <div class="prompt-section">
+                    <div class="prompt-header" onclick="togglePrompt(${index})">
+                        <h4>
+                            <span>💡</span>
+                            Copilot Prompt
+                        </h4>
+                        <span class="prompt-toggle" id="promptToggle${index}">▼ Show</span>
+                    </div>
+                    <div class="prompt-content" id="promptContent${index}">
+                        <div class="prompt-text">${escapeHtml(issue.copilot_prompt)}</div>
+                        <div class="prompt-actions">
+                            <button class="btn btn-secondary btn-small" onclick="copyPrompt(${index})">
+                                📋 Copy Prompt
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                ` : ''}
+            `;
+            
+            return card;
+        }
+
+        function displayPrompts(data) {
+            promptsContainer.innerHTML = '';
+            
+            if (data.prompt_count === 0) {
+                promptsContainer.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📝</div><h3>No Prompts</h3><p>No prompts match the selected filters.</p></div>';
+                document.getElementById('copyAllPromptsBtn').disabled = true;
+                return;
+            }
+            
+            document.getElementById('copyAllPromptsBtn').disabled = false;
+            
+            data.prompts.forEach((prompt, index) => {
+                const scored = data.scored_issues ? data.scored_issues[index] : null;
+                const card = createPromptCard(prompt, scored, index);
+                promptsContainer.appendChild(card);
+            });
+        }
+
+        function createPromptCard(prompt, scored, index) {
+            const card = document.createElement('div');
+            card.className = 'issue-card';
+            
+            const priorityClass = scored ? `priority-${scored.issue.priority}` : '';
+            card.classList.add(priorityClass);
+            
+            const scores = scored ? `
+                <div class="issue-meta">
+                    <div class="meta-item">
+                        <div class="meta-label">Impact</div>
+                        <div class="meta-value">${scored.impact_score.toFixed(2)}</div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-label">Effort</div>
+                        <div class="meta-value">${scored.effort_score.toFixed(2)}</div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-label">Risk</div>
+                        <div class="meta-value">${scored.risk_score.toFixed(2)}</div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-label">Priority</div>
+                        <div class="meta-value">${scored.priority_score.toFixed(2)}</div>
+                    </div>
+                </div>
+            ` : '';
+            
+            card.innerHTML = `
+                <div class="issue-header">
+                    <div class="issue-title-section">
+                        <div class="issue-title">Prompt ${index + 1}</div>
+                    </div>
+                    ${scored ? `<div class="issue-badges"><span class="badge badge-priority-${scored.issue.priority}">${scored.issue.priority}</span></div>` : ''}
+                </div>
+                ${scores}
+                <div class="prompt-content show">
+                    <div class="prompt-text">${escapeHtml(prompt)}</div>
+                    <div class="prompt-actions">
+                        <button class="btn btn-secondary btn-small" onclick="copyPromptDirect('${index}')">
+                            📋 Copy Prompt
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            return card;
+        }
+
+        function displayComparison(data) {
+            comparisonContainer.innerHTML = `
+                <div class="agreement-indicator">
+                    <div class="agreement-score">${(data.agreement_score * 100).toFixed(1)}%</div>
+                    <div class="agreement-label">Agreement Score</div>
+                </div>
+                
+                <div class="comparison-container">
+                    <div class="comparison-column">
+                        <div class="comparison-header">
+                            <h3>🤖 Analyzer A</h3>
+                        </div>
+                        <div class="comparison-stats">
+                            <div class="stat-item">
+                                <span>Total:</span>
+                                <span class="stat-value">${data.analyzer_a_issues}</span>
+                            </div>
+                            <div class="stat-item">
+                                <span>Unique:</span>
+                                <span class="stat-value">${data.unique_to_a}</span>
+                            </div>
+                        </div>
+                        <div class="comparison-issues">
+                            ${data.issues_a.map(issue => `
+                                <div class="comparison-issue ${data.common.some(c => c.title === issue.title) ? 'common' : 'unique'}">
+                                    <div class="comparison-issue-title">${escapeHtml(issue.title)}</div>
+                                    <div class="comparison-issue-category">${escapeHtml(issue.category)} • ${issue.priority}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    
+                    <div class="comparison-column">
+                        <div class="comparison-header">
+                            <h3>🤖 Analyzer B</h3>
+                        </div>
+                        <div class="comparison-stats">
+                            <div class="stat-item">
+                                <span>Total:</span>
+                                <span class="stat-value">${data.analyzer_b_issues}</span>
+                            </div>
+                            <div class="stat-item">
+                                <span>Unique:</span>
+                                <span class="stat-value">${data.unique_to_b}</span>
+                            </div>
+                        </div>
+                        <div class="comparison-issues">
+                            ${data.issues_b.map(issue => `
+                                <div class="comparison-issue ${data.common.some(c => c.title === issue.title) ? 'common' : 'unique'}">
+                                    <div class="comparison-issue-title">${escapeHtml(issue.title)}</div>
+                                    <div class="comparison-issue-category">${escapeHtml(issue.category)} • ${issue.priority}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 1.5rem; padding: 1rem; background-color: #2d2d2d; border-radius: 8px;">
+                    <h3 style="margin-bottom: 0.5rem; color: #4a9eff;">📊 Recommendation</h3>
+                    <p style="color: #b0b0b0;">${escapeHtml(data.recommendation)}</p>
+                </div>
+            `;
+            
+            // Show summary
+            summarySection.style.display = 'block';
+            resultsTabs.style.display = 'block';
+            
+            document.getElementById('totalIssues').textContent = data.common_issues + data.unique_to_a + data.unique_to_b;
+            document.getElementById('highPriority').textContent = [...data.issues_a, ...data.issues_b].filter(i => i.priority === 'HIGH').length;
+            document.getElementById('analysisTime').textContent = data.analysis_duration.toFixed(2) + 's';
+        }
+
+        // Filter Issues
+        function filterIssues() {
+            const priority = priorityFilter.value;
+            const category = categoryFilter.value;
+            
+            const cards = issuesContainer.querySelectorAll('.issue-card');
+            let visibleCount = 0;
+            
+            cards.forEach(card => {
+                const cardPriority = card.dataset.priority;
+                const cardCategory = card.dataset.category;
+                
+                const priorityMatch = priority === 'ALL' || cardPriority === priority;
+                const categoryMatch = category === 'ALL' || cardCategory === category;
+                
+                if (priorityMatch && categoryMatch) {
+                    card.style.display = 'block';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+            
+            filteredCount.textContent = visibleCount;
+        }
+
+        // Toggle Prompt Visibility
+        window.togglePrompt = function(index) {
+            const content = document.getElementById(`promptContent${index}`);
+            const toggle = document.getElementById(`promptToggle${index}`);
+            
+            content.classList.toggle('show');
+            
+            if (content.classList.contains('show')) {
+                toggle.textContent = '▲ Hide';
+            } else {
+                toggle.textContent = '▼ Show';
+            }
+        };
+
+        // Copy Functions
+        window.copyPrompt = function(index) {
+            const promptText = document.getElementById(`promptContent${index}`).querySelector('.prompt-text').textContent;
+            copyToClipboard(promptText);
+        };
+
+        window.copyPromptDirect = function(index) {
+            const prompts = promptsContainer.querySelectorAll('.prompt-text');
+            if (prompts[index]) {
+                copyToClipboard(prompts[index].textContent);
+            }
+        };
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showCopyNotification();
+            }).catch(err => {
+                console.error('Copy failed:', err);
+            });
+        }
+
+        function showCopyNotification(message = 'Copied to clipboard!') {
+            copyNotification.textContent = message;
+            copyNotification.classList.add('show');
+            
+            setTimeout(() => {
+                copyNotification.classList.remove('show');
+            }, 2000);
+        }
+
+        // Status Functions
+        function showStatus(type, message) {
+            statusBar.className = `status-bar show ${type}`;
+            statusText.textContent = message;
+        }
+
+        function hideStatus() {
+            statusBar.classList.remove('show');
+        }
+
+        function showEmptyState() {
+            emptyState.style.display = 'block';
+            summarySection.style.display = 'none';
+            resultsTabs.style.display = 'none';
+        }
+
+        function hideEmptyState() {
+            emptyState.style.display = 'none';
+        }
+
+        // Utility Functions
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Auto-refresh toggle (click on indicator)
+        autoRefreshIndicator.addEventListener('click', () => {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+                autoRefreshInterval = null;
+                autoRefreshIndicator.classList.remove('active');
+                autoRefreshText.textContent = 'Auto-refresh: Off';
+            } else {
+                autoRefreshInterval = setInterval(() => {
+                    if (currentAnalysisId) {
+                        const filePath = filePathInput.value.trim();
+                        if (filePath) {
+                            runAnalysis(filePath, currentMode);
+                        }
+                    }
+                }, 5000);
+                autoRefreshIndicator.classList.add('active');
+                autoRefreshText.textContent = 'Auto-refresh: On (5s)';
+            }
+        });
+
+        // Initialize
+        console.log('Code Analysis UI initialized');
+        console.log('API Base:', API_BASE);
+    </script>
+</body>
+</html>
