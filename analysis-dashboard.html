@@ -1488,9 +1488,14 @@
         }
 
         function getPredictedSuccessRate(category) {
-            if (!allData.stats || !allData.stats.categories[category]) return 50;
+            if (!allData.stats || !allData.stats.categories) return 50;
+            
             const cat = allData.stats.categories[category];
-            return cat.total > 0 ? (cat.successful / cat.total) * 100 : 50;
+            if (!cat || cat.total === 0) return 50;
+            
+            // Calculate success rate from applied suggestions
+            const successRate = cat.applied > 0 ? (cat.successful / cat.applied) * 100 : 50;
+            return successRate;
         }
 
         function showLoading() {
