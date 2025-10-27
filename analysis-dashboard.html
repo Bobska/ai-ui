@@ -1246,6 +1246,12 @@
                         <p><strong>Category:</strong> ${data.issue.category}</p>
                         <p><strong>Priority:</strong> <span class="badge ${data.issue.priority.toLowerCase()}">${data.issue.priority}</span></p>
                         <p><strong>Location:</strong> ${data.issue.location}</p>
+                        <!-- After "Location:" -->
+                        <div class="detail-row">
+                            <strong>Suggestion ID:</strong>
+                            <code>${data.suggestion_id}</code>
+                            <button onclick="copyToClipboard('{suggestion.suggestion_id}')">📋 Copy</button>
+                        </div>
                         <p><strong>Description:</strong> ${data.issue.description}</p>
                         <p><strong>Impact:</strong> ${data.issue.impact}</p>
                         <p><strong>Estimated Improvement:</strong> ${data.issue.estimated_improvement}</p>
@@ -1265,15 +1271,27 @@
                         <div class="metrics-comparison">
                             <div class="metric-box">
                                 <h5>Before</h5>
-                                <div class="metric-value">${data.before_metrics.complexity || 'N/A'}</div>
+                                <div class="metric-value">${data.before_metrics.complexity || data.before_metrics.average_complexity || 'N/A'}</div>
                                 <small>Complexity</small>
                             </div>
                             <div class="metric-box">
                                 <h5>After</h5>
                                 <div class="metric-value" style="color: #22c55e;">
-                                    ${data.after_metrics.complexity || 'N/A'}
+                                    ${data.after_metrics.complexity || data.after_metrics.average_complexity || 'N/A'}
                                 </div>
                                 <small>Complexity</small>
+                            </div>
+                            <div class="metric-box">
+                                <h5>Before</h5>
+                                <div class="metric-value">${data.before_metrics.lines || data.before_metrics.total_lines || data.before_metrics.code_lines || 'N/A'}</div>
+                                <small>Lines</small>
+                            </div>
+                            <div class="metric-box">
+                                <h5>After</h5>
+                                <div class="metric-value" style="color: #22c55e;">
+                                    ${data.after_metrics.lines || data.after_metrics.total_lines || data.after_metrics.code_lines || 'N/A'}
+                                </div>
+                                <small>Lines</small>
                             </div>
                         </div>
                     </div>
@@ -1448,8 +1466,25 @@
         }
 
         function formatMetric(metrics) {
-            if (!metrics) return 'N/A';
-            return `C: ${metrics.complexity || 0}`;
+            if (!metrics || Object.keys(metrics).length === 0) return 'N/A';
+            
+            // Handle both old format (complexity/performance_ms/lines) and new format (average_complexity/total_lines)
+            const complexity = metrics.complexity || metrics.average_complexity;
+            const lines = metrics.lines || metrics.total_lines || metrics.code_lines;
+            const perf = metrics.performance_ms;
+            
+            const parts = [];
+            if (complexity !== undefined && complexity !== null) {
+                parts.push(`C: ${typeof complexity === 'number' ? complexity.toFixed(1) : complexity}`);
+            }
+            if (lines !== undefined && lines !== null) {
+                parts.push(`L: ${lines}`);
+            }
+            if (perf !== undefined && perf !== null) {
+                parts.push(`P: ${perf}ms`);
+            }
+            
+            return parts.length > 0 ? parts.join(', ') : 'N/A';
         }
 
         function getPredictedSuccessRate(category) {
