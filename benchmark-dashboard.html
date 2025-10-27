@@ -2332,11 +2332,20 @@
 
         // Run benchmark modal functions
         async function closeRunBenchmarkModal() {
-            // Cancel any ongoing benchmark on the server
-            if (currentBenchmarkId && benchmarkPollInterval) {
+            // Stop polling first to prevent errors during cleanup
+            const wasPolling = benchmarkPollInterval !== null;
+            if (benchmarkPollInterval) {
+                clearInterval(benchmarkPollInterval);
+                benchmarkPollInterval = null;
+            }
+            
+            // Cancel any ongoing benchmark on the server (only if we were actually polling)
+            if (currentBenchmarkId && wasPolling) {
                 try {
                     const response = await fetch(`${API_BASE}/benchmark/cancel/${currentBenchmarkId}`, {
-                        method: 'POST'
+                        method: 'POST',
+                        // Add timeout to prevent hanging
+                        signal: AbortSignal.timeout(3000)
                     });
                     const data = await response.json();
                     
@@ -2344,14 +2353,9 @@
                         console.log('Benchmark cancelled:', data.message);
                     }
                 } catch (error) {
+                    // Silently fail if server is down - we already stopped polling
                     console.warn('Failed to cancel benchmark on server:', error);
                 }
-            }
-            
-            // Stop polling
-            if (benchmarkPollInterval) {
-                clearInterval(benchmarkPollInterval);
-                benchmarkPollInterval = null;
             }
             
             currentBenchmarkId = null;
@@ -2443,6 +2447,7 @@
         function pollBenchmarkStatus(benchmarkId) {
             let pollCount = 0;
             const maxPolls = 300; // 10 minutes max (300 * 2 seconds)
+            let errorShown = false; // Track if we've already shown connection error
             
             benchmarkPollInterval = setInterval(async () => {
                 pollCount++;
@@ -2455,6 +2460,11 @@
                     document.getElementById('startBenchmarkBtn').disabled = false;
                     document.getElementById('startBenchmarkBtn').style.display = 'inline-flex';
                     document.getElementById('cancelBenchmarkBtn').style.display = 'none';
+                    
+                    if (!errorShown) {
+                        errorShown = true;
+                        alert('⚠️ Benchmark timeout after 10 minutes.\n\nPlease check if the API server is still running.');
+                    }
                     return;
                 }
                 
@@ -2522,7 +2532,11 @@
                     document.getElementById('startBenchmarkBtn').style.display = 'inline-flex';
                     document.getElementById('cancelBenchmarkBtn').style.display = 'none';
                     
-                    alert('Lost connection to benchmark. The API server may have stopped.\n\nPlease check if the server is still running.');
+                    // Only show alert once
+                    if (!errorShown) {
+                        errorShown = true;
+                        alert('❌ Lost connection to benchmark API server.\n\nThe server may have stopped. Please check:\n1. Is the API server running?\n2. Command to start: uvicorn api_server:app --reload --port 8000');
+                    }
                 }
             }, 2000); // Poll every 2 seconds
         }
