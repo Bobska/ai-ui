@@ -1414,6 +1414,9 @@
                 <button class="btn btn-primary" id="startBenchmarkBtn" onclick="startBenchmark()">
                     ▶️ Start Benchmark
                 </button>
+                <button class="btn btn-secondary" id="cancelBenchmarkBtn" onclick="closeRunBenchmarkModal()" style="display: none;">
+                    ⏹️ Stop Benchmark
+                </button>
             </div>
         </div>
     </div>
@@ -1461,6 +1464,7 @@
         let currentData = null;
         let dateRange = 'all';
         let currentBenchmarkId = null;
+        let benchmarkPollInterval = null;
 
         // Initialize dashboard
         async function init() {
@@ -2328,12 +2332,27 @@
 
         // Run benchmark modal functions
         function closeRunBenchmarkModal() {
+            // Cancel any ongoing benchmark polling
+            if (benchmarkPollInterval) {
+                clearInterval(benchmarkPollInterval);
+                benchmarkPollInterval = null;
+            }
+            
             document.getElementById('runBenchmarkModal').style.display = 'none';
+            
             // Reset form
             document.getElementById('categoryAll').checked = true;
             document.querySelectorAll('.category-checkbox').forEach(cb => cb.checked = true);
             document.getElementById('quickMode').checked = false;
             document.getElementById('benchmarkProgress').style.display = 'none';
+            document.getElementById('startBenchmarkBtn').disabled = false;
+            document.getElementById('startBenchmarkBtn').style.display = 'inline-flex';
+            document.getElementById('cancelBenchmarkBtn').style.display = 'none';
+            
+            // Reset progress
+            document.getElementById('progressFill').style.width = '0%';
+            document.getElementById('progressText').textContent = '0%';
+            document.getElementById('progressStatus').textContent = 'Initializing...';
         }
 
         function toggleAllCategories() {
@@ -2356,9 +2375,12 @@
             
             const quickMode = document.getElementById('quickMode').checked;
             
-            // Show progress
+            // Show progress and disable start button
             document.getElementById('benchmarkProgress').style.display = 'block';
             document.getElementById('startBenchmarkBtn').disabled = true;
+            document.getElementById('startBenchmarkBtn').style.display = 'none';
+            document.getElementById('cancelBenchmarkBtn').style.display = 'inline-flex';
+            document.getElementById('progressStatus').textContent = 'Starting benchmark...';
             
             try {
                 const response = await fetch(`${API_BASE}/run`, {
@@ -2372,7 +2394,7 @@
                 });
                 
                 if (!response.ok) {
-                    throw new Error(`API returned ${response.status}`);
+                    throw new Error(`API returned ${response.status}: ${response.statusText}`);
                 }
                 
                 const data = await response.json();
@@ -2383,15 +2405,41 @@
                 
             } catch (error) {
                 console.error('Error starting benchmark:', error);
-                alert('Failed to start benchmark: ' + error.message);
+                
+                // Check if it's a connection error
+                if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                    alert('❌ Cannot connect to API server.\n\nPlease ensure the API server is running:\n\nuvicorn api_server:app --reload --host 0.0.0.0 --port 8000');
+                } else {
+                    alert('Failed to start benchmark: ' + error.message);
+                }
+                
+                // Reset UI
                 document.getElementById('benchmarkProgress').style.display = 'none';
                 document.getElementById('startBenchmarkBtn').disabled = false;
+                document.getElementById('startBenchmarkBtn').style.display = 'inline-flex';
+                document.getElementById('cancelBenchmarkBtn').style.display = 'none';
             }
         }
 
         // Poll benchmark status
         function pollBenchmarkStatus(benchmarkId) {
-            const interval = setInterval(async () => {
+            let pollCount = 0;
+            const maxPolls = 300; // 10 minutes max (300 * 2 seconds)
+            
+            benchmarkPollInterval = setInterval(async () => {
+                pollCount++;
+                
+                // Timeout after max polls
+                if (pollCount > maxPolls) {
+                    clearInterval(benchmarkPollInterval);
+                    benchmarkPollInterval = null;
+                    document.getElementById('progressStatus').textContent = '⚠️ Benchmark timeout. Please check the API server.';
+                    document.getElementById('startBenchmarkBtn').disabled = false;
+                    document.getElementById('startBenchmarkBtn').style.display = 'inline-flex';
+                    document.getElementById('cancelBenchmarkBtn').style.display = 'none';
+                    return;
+                }
+                
                 try {
                     const response = await fetch(`${API_BASE}/status/${benchmarkId}`);
                     if (!response.ok) {
@@ -2405,30 +2453,51 @@
                     const progressText = document.getElementById('progressText');
                     const progressStatus = document.getElementById('progressStatus');
                     
-                    progressFill.style.width = status.progress + '%';
-                    progressText.textContent = status.progress + '%';
-                    progressStatus.textContent = status.status === 'running' ? 'Running tests...' : status.status;
+                    const progress = status.progress || 0;
+                    progressFill.style.width = progress + '%';
+                    progressText.textContent = progress + '%';
+                    
+                    // Update status message
+                    if (status.status === 'running') {
+                        progressStatus.textContent = `Running tests... (${progress}% complete)`;
+                    } else if (status.status === 'pending') {
+                        progressStatus.textContent = 'Initializing tests...';
+                    } else {
+                        progressStatus.textContent = status.status;
+                    }
                     
                     // Check if complete
                     if (status.status === 'completed') {
-                        clearInterval(interval);
-                        progressStatus.textContent = '✅ Benchmark completed!';
+                        clearInterval(benchmarkPollInterval);
+                        benchmarkPollInterval = null;
+                        progressStatus.textContent = '✅ Benchmark completed successfully!';
                         
                         // Wait a moment then close and refresh
                         setTimeout(() => {
                             closeRunBenchmarkModal();
                             location.reload();
                         }, 2000);
-                    } else if (status.status === 'failed') {
-                        clearInterval(interval);
-                        progressStatus.textContent = '❌ Benchmark failed: ' + status.error;
+                    } else if (status.status === 'failed' || status.status === 'error') {
+                        clearInterval(benchmarkPollInterval);
+                        benchmarkPollInterval = null;
+                        const errorMsg = status.error || 'Unknown error';
+                        progressStatus.textContent = '❌ Benchmark failed: ' + errorMsg;
                         document.getElementById('startBenchmarkBtn').disabled = false;
+                        document.getElementById('startBenchmarkBtn').style.display = 'inline-flex';
+                        document.getElementById('cancelBenchmarkBtn').style.display = 'none';
                     }
                     
                 } catch (error) {
                     console.error('Error polling status:', error);
-                    clearInterval(interval);
-                    alert('Lost connection to benchmark. Please refresh the page.');
+                    clearInterval(benchmarkPollInterval);
+                    benchmarkPollInterval = null;
+                    
+                    document.getElementById('progressStatus').textContent = '❌ Lost connection to API server';
+                    document.getElementById('startBenchmarkBtn').disabled = false;
+                    document.getElementById('startBenchmarkBtn').style.display = 'inline-flex';
+                    document.getElementById('cancelBenchmarkBtn').style.display = 'none';
+                    
+                    alert('Lost connection to benchmark. The API server may have stopped.\n\nPlease check if the server is still running.');
                 }
             }, 2000); // Poll every 2 seconds
         }
