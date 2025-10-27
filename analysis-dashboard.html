@@ -1534,7 +1534,20 @@
 
         // Helper functions
         function getFileName(location) {
-            return location.split(':')[0].split('/').pop();
+            // Extract filename with line number from location string
+            // Handles formats like: "C:\path\to\file.py:123" or "/path/to/file.py:123"
+            
+            // First check if there's a line number (last colon followed by digits)
+            const lineMatch = location.match(/:(\d+)$/);
+            const lineNumber = lineMatch ? `:${lineMatch[1]}` : '';
+            
+            // Remove line number for path processing
+            const pathOnly = lineMatch ? location.substring(0, location.lastIndexOf(':')) : location;
+            
+            // Get filename from path (handles both / and \ separators)
+            const filename = pathOnly.split(/[/\\]/).pop();
+            
+            return filename + lineNumber;
         }
 
         function truncateText(text, maxLength) {
