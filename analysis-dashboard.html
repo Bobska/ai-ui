@@ -779,7 +779,12 @@
 
         <!-- Recent Improvements Table -->
         <div class="table-section">
-            <h3>📈 Recent Improvements</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3>📈 Recent Improvements</h3>
+                <div id="metricsWarning" style="display: none; background-color: #854d0e; color: #fef3c7; padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.85rem;">
+                    ⚠️ <span id="metricsWarningCount">0</span> improvements missing metrics - learning effectiveness unknown
+                </div>
+            </div>
             <div class="table-wrapper">
                 <table>
                     <thead>
@@ -1142,7 +1147,23 @@
                         </td>
                     </tr>
                 `;
+                document.getElementById('metricsWarning').style.display = 'none';
                 return;
+            }
+
+            // Count how many improvements are missing metrics
+            const missingMetrics = applied.filter(r => 
+                r.improvement_score === null || r.improvement_score === undefined
+            ).length;
+            
+            // Show/update warning banner
+            const warningEl = document.getElementById('metricsWarning');
+            const warningCount = document.getElementById('metricsWarningCount');
+            if (missingMetrics > 0) {
+                warningCount.textContent = missingMetrics;
+                warningEl.style.display = 'block';
+            } else {
+                warningEl.style.display = 'none';
             }
 
             tbody.innerHTML = applied.map(record => {
@@ -1151,10 +1172,12 @@
                 // Handle improvement_score properly - check for null/undefined vs 0
                 const hasScore = record.improvement_score !== null && record.improvement_score !== undefined;
                 const score = hasScore ? record.improvement_score : 0;
-                const scoreDisplay = hasScore ? score.toFixed(1) : 'N/A';
+                const scoreDisplay = hasScore ? score.toFixed(1) : '<span style="color: #f59e0b; cursor: help;" title="Metrics not collected - learning effectiveness unknown">⚠️ N/A</span>';
                 
-                const statusClass = score > 50 ? 'success' : score < 50 ? 'danger' : 'warning';
-                const statusText = record.success ? 'Success' : record.success === false ? 'Regression' : 'Unknown';
+                const statusClass = hasScore ? (score > 50 ? 'success' : score < 50 ? 'danger' : 'warning') : '';
+                const statusText = hasScore 
+                    ? (record.success ? 'Success' : record.success === false ? 'Regression' : 'Unknown')
+                    : '<span style="color: #f59e0b;" title="Cannot determine without metrics">⚠️ Unknown</span>';
                 
                 return `
                     <tr class="${statusClass}" onclick="showDetail('${record.suggestion_id}')">
