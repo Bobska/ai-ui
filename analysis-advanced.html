@@ -1,0 +1,3531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Analysis - My AI Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        header {
+            background-color: #2d2d2d;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            flex-shrink: 0;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        nav {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        nav a {
+            color: #b0b0b0;
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: color 0.2s;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+        }
+
+        nav a:hover {
+            color: #ffffff;
+            background-color: #3a3a3a;
+        }
+
+        nav a.active {
+            color: #4a9eff;
+            font-weight: 500;
+        }
+
+        /* Main Container */
+        main {
+            flex: 1;
+            max-width: 1600px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Page Header */
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-header h2 {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-header p {
+            color: #b0b0b0;
+            font-size: 1rem;
+        }
+
+        /* Tab Navigation */
+        .tab-navigation {
+            display: flex;
+            gap: 0.5rem;
+            border-bottom: 2px solid #3a3a3a;
+            margin-bottom: 2rem;
+        }
+
+        .tab-button {
+            background: none;
+            border: none;
+            color: #b0b0b0;
+            padding: 1rem 1.5rem;
+            font-size: 0.95rem;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .tab-button:hover {
+            color: #ffffff;
+            background-color: #2d2d2d;
+        }
+
+        .tab-button.active {
+            color: #4a9eff;
+            border-bottom-color: #4a9eff;
+        }
+
+        /* Tab Content */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Control Panel */
+        .control-panel {
+            background-color: #2d2d2d;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .control-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .control-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .control-section label {
+            display: block;
+            color: #ffffff;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        .control-section input,
+        .control-section select {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: #3a3a3a;
+            border: 1px solid #4a4a4a;
+            border-radius: 8px;
+            color: #e0e0e0;
+            font-size: 0.95rem;
+            font-family: inherit;
+        }
+
+        .control-section input:focus,
+        .control-section select:focus {
+            outline: none;
+            border-color: #4a9eff;
+            box-shadow: 0 0 0 3px rgba(74, 158, 255, 0.1);
+        }
+
+        .control-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.75rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4a9eff 0%, #357abd 100%);
+            color: #ffffff;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(74, 158, 255, 0.3);
+        }
+
+        .btn-primary:disabled {
+            background: #3a3a3a;
+            color: #666666;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Results Summary */
+        .results-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .summary-card {
+            background-color: #2d2d2d;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .summary-card h3 {
+            color: #ffffff;
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        /* Score Gauge */
+        .score-gauge {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            margin: 0 auto;
+        }
+
+        .gauge-circle {
+            transform: rotate(-90deg);
+        }
+
+        .gauge-background {
+            fill: none;
+            stroke: #3a3a3a;
+            stroke-width: 12;
+        }
+
+        .gauge-progress {
+            fill: none;
+            stroke: #4a9eff;
+            stroke-width: 12;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 1s ease;
+        }
+
+        .gauge-score {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .gauge-score .score-value {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .gauge-score .score-label {
+            font-size: 0.85rem;
+            color: #b0b0b0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Issues Breakdown */
+        .issues-list {
+            list-style: none;
+        }
+
+        .issue-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #3a3a3a;
+        }
+
+        .issue-item:last-child {
+            border-bottom: none;
+        }
+
+        .issue-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #b0b0b0;
+        }
+
+        .issue-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .issue-badge.critical {
+            background-color: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .issue-badge.high {
+            background-color: rgba(249, 115, 22, 0.2);
+            color: #f97316;
+        }
+
+        .issue-badge.medium {
+            background-color: rgba(234, 179, 8, 0.2);
+            color: #eab308;
+        }
+
+        .issue-badge.low {
+            background-color: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+        }
+
+        .issue-count {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        /* Category Breakdown */
+        .category-bar {
+            margin-bottom: 1rem;
+        }
+
+        .category-bar:last-child {
+            margin-bottom: 0;
+        }
+
+        .category-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .category-name {
+            color: #b0b0b0;
+            font-size: 0.9rem;
+        }
+
+        .category-value {
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .category-progress {
+            height: 8px;
+            background-color: #3a3a3a;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .category-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4a9eff 0%, #357abd 100%);
+            border-radius: 4px;
+            transition: width 0.6s ease;
+        }
+
+        /* Loading State */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 3rem;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid #3a3a3a;
+            border-top: 3px solid #4a9eff;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #666666;
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .empty-state h3 {
+            color: #888888;
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-state p {
+            color: #666666;
+        }
+
+        /* Alert Messages */
+        .alert {
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .alert-info {
+            background-color: rgba(74, 158, 255, 0.1);
+            border: 1px solid rgba(74, 158, 255, 0.3);
+            color: #4a9eff;
+        }
+
+        .alert-success {
+            background-color: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: #22c55e;
+        }
+
+        .alert-error {
+            background-color: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+        }
+
+        .alert-icon {
+            font-size: 1.25rem;
+        }
+
+        /* Issue Cards */
+        .issue-card {
+            background-color: #2d2d2d;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #4a9eff;
+        }
+
+        .issue-card.critical {
+            border-left-color: #ef4444;
+        }
+
+        .issue-card.high {
+            border-left-color: #f97316;
+        }
+
+        .issue-card.medium {
+            border-left-color: #eab308;
+        }
+
+        .issue-card.low {
+            border-left-color: #22c55e;
+        }
+
+        .issue-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .issue-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+        }
+
+        .issue-meta {
+            display: flex;
+            gap: 1rem;
+            color: #b0b0b0;
+            font-size: 0.85rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .issue-location {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .issue-description {
+            color: #e0e0e0;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        /* Collapsible Sections */
+        .collapsible {
+            cursor: pointer;
+            background-color: #3a3a3a;
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            margin-top: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.2s;
+        }
+
+        .collapsible:hover {
+            background-color: #4a4a4a;
+        }
+
+        .collapsible-title {
+            font-weight: 500;
+            color: #ffffff;
+        }
+
+        .collapsible-icon {
+            transition: transform 0.3s;
+        }
+
+        .collapsible.active .collapsible-icon {
+            transform: rotate(180deg);
+        }
+
+        .collapsible-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .collapsible-content.active {
+            max-height: 2000px;
+        }
+
+        .collapsible-inner {
+            padding: 1rem;
+            background-color: #1a1a1a;
+            border-radius: 6px;
+            margin-top: 0.5rem;
+        }
+
+        /* Code Preview */
+        .code-preview {
+            background-color: #1a1a1a;
+            border-radius: 6px;
+            padding: 1rem;
+            overflow-x: auto;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .code-line {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .line-number {
+            color: #666666;
+            user-select: none;
+            min-width: 40px;
+            text-align: right;
+        }
+
+        .line-content {
+            color: #e0e0e0;
+            flex: 1;
+        }
+
+        .line-content.highlight {
+            background-color: rgba(239, 68, 68, 0.2);
+            margin: 0 -1rem;
+            padding: 0 1rem;
+        }
+
+        /* Filters */
+        .filters-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .search-box {
+            grid-column: 1 / -1;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.5rem;
+            background-color: #2d2d2d;
+            border: 1px solid #4a4a4a;
+            border-radius: 8px;
+            color: #e0e0e0;
+            font-size: 0.95rem;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%23b0b0b0' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: 10px center;
+        }
+
+        /* Heatmap */
+        .heatmap-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .heatmap-cell {
+            aspect-ratio: 1;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #ffffff;
+            cursor: pointer;
+            transition: transform 0.2s;
+            position: relative;
+        }
+
+        .heatmap-cell:hover {
+            transform: scale(1.1);
+            z-index: 10;
+        }
+
+        .heatmap-cell.severity-critical {
+            background-color: #ef4444;
+        }
+
+        .heatmap-cell.severity-high {
+            background-color: #f97316;
+        }
+
+        .heatmap-cell.severity-medium {
+            background-color: #eab308;
+        }
+
+        .heatmap-cell.severity-low {
+            background-color: #22c55e;
+        }
+
+        .heatmap-cell.severity-none {
+            background-color: #3a3a3a;
+            color: #666666;
+        }
+
+        .heatmap-tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #1a1a1a;
+            padding: 0.5rem;
+            border-radius: 4px;
+            white-space: nowrap;
+            font-size: 0.8rem;
+            display: none;
+            margin-bottom: 0.5rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+        }
+
+        .heatmap-cell:hover .heatmap-tooltip {
+            display: block;
+        }
+
+        /* Technical Debt */
+        .debt-stat {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            border-bottom: 1px solid #3a3a3a;
+        }
+
+        .debt-stat:last-child {
+            border-bottom: none;
+        }
+
+        .debt-label {
+            color: #b0b0b0;
+            font-size: 0.95rem;
+        }
+
+        .debt-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .debt-value.hours {
+            color: #f97316;
+        }
+
+        .debt-value.cost {
+            color: #ef4444;
+        }
+
+        /* Top Files List */
+        .file-list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background-color: #2d2d2d;
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+            border-left: 3px solid #4a9eff;
+        }
+
+        .file-info {
+            flex: 1;
+        }
+
+        .file-name {
+            color: #ffffff;
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .file-stats {
+            display: flex;
+            gap: 1rem;
+            color: #b0b0b0;
+            font-size: 0.85rem;
+        }
+
+        .file-score {
+            min-width: 60px;
+            text-align: right;
+        }
+
+        .file-score-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #ef4444;
+        }
+
+        /* Dual Analysis */
+        .dual-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .analyzer-panel {
+            background-color: #2d2d2d;
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .analyzer-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #3a3a3a;
+        }
+
+        .analyzer-icon {
+            font-size: 2rem;
+        }
+
+        .analyzer-title {
+            flex: 1;
+        }
+
+        .analyzer-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 0.25rem;
+        }
+
+        .analyzer-type {
+            color: #b0b0b0;
+            font-size: 0.85rem;
+        }
+
+        .comparison-section {
+            margin-top: 2rem;
+        }
+
+        .comparison-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .agreement-item {
+            background-color: #2d2d2d;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            border-left: 4px solid #22c55e;
+        }
+
+        .disagreement-item {
+            background-color: #2d2d2d;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            border-left: 4px solid #eab308;
+        }
+
+        .trend-chart {
+            height: 200px;
+            background-color: #2d2d2d;
+            border-radius: 8px;
+            padding: 1rem;
+            display: flex;
+            align-items: flex-end;
+            gap: 0.5rem;
+        }
+
+        .trend-bar {
+            flex: 1;
+            background: linear-gradient(180deg, #4a9eff 0%, #357abd 100%);
+            border-radius: 4px 4px 0 0;
+            min-height: 10px;
+            position: relative;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .trend-bar:hover {
+            opacity: 0.8;
+        }
+
+        .trend-label {
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.7rem;
+            color: #b0b0b0;
+            white-space: nowrap;
+        }
+
+        /* Buttons */
+        .btn-secondary {
+            background-color: #3a3a3a;
+            color: #ffffff;
+        }
+
+        .btn-secondary:hover {
+            background-color: #4a4a4a;
+        }
+
+        .btn-small {
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+        }
+
+        .btn-icon {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-success {
+            background-color: #22c55e;
+            color: #ffffff;
+        }
+
+        .btn-success:hover {
+            background-color: #16a34a;
+        }
+
+        .btn-warning {
+            background-color: #eab308;
+            color: #1a1a1a;
+        }
+
+        .btn-warning:hover {
+            background-color: #ca8a04;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        /* Roadmap Sections */
+        .roadmap-section {
+            background-color: #2d2d2d;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .roadmap-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #3a3a3a;
+        }
+
+        .roadmap-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .roadmap-title h3 {
+            color: #ffffff;
+            font-size: 1.25rem;
+            margin: 0;
+        }
+
+        .roadmap-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .roadmap-badge.quick-wins {
+            background-color: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+        }
+
+        .roadmap-badge.major {
+            background-color: rgba(249, 115, 22, 0.2);
+            color: #f97316;
+        }
+
+        .roadmap-badge.long-term {
+            background-color: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .roadmap-stats {
+            display: flex;
+            gap: 2rem;
+            color: #b0b0b0;
+            font-size: 0.9rem;
+        }
+
+        .roadmap-stat strong {
+            color: #ffffff;
+        }
+
+        .roadmap-items {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .roadmap-item {
+            background-color: #1a1a1a;
+            border-radius: 8px;
+            padding: 1rem;
+            border-left: 4px solid #4a9eff;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .roadmap-item.applied {
+            opacity: 0.6;
+            border-left-color: #22c55e;
+        }
+
+        .roadmap-item.skipped {
+            opacity: 0.4;
+            border-left-color: #666666;
+        }
+
+        .roadmap-item-info {
+            flex: 1;
+        }
+
+        .roadmap-item-title {
+            color: #ffffff;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .roadmap-item-meta {
+            display: flex;
+            gap: 1rem;
+            color: #b0b0b0;
+            font-size: 0.85rem;
+            flex-wrap: wrap;
+        }
+
+        .roadmap-item-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-shrink: 0;
+        }
+
+        /* Effort vs Impact Matrix */
+        .matrix-container {
+            background-color: #2d2d2d;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .matrix-grid {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            background: linear-gradient(to top, rgba(239, 68, 68, 0.1) 0%, rgba(34, 197, 94, 0.1) 100%);
+            border-radius: 8px;
+            border: 2px solid #3a3a3a;
+        }
+
+        .matrix-axis {
+            position: absolute;
+            color: #b0b0b0;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .matrix-x-axis {
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .matrix-y-axis {
+            left: -80px;
+            top: 50%;
+            transform: translateY(-50%) rotate(-90deg);
+        }
+
+        .matrix-quadrant {
+            position: absolute;
+            width: 50%;
+            height: 50%;
+            border: 1px dashed #4a4a4a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666666;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .matrix-quadrant.q1 { top: 0; right: 0; background: rgba(34, 197, 94, 0.05); }
+        .matrix-quadrant.q2 { top: 0; left: 0; background: rgba(74, 158, 255, 0.05); }
+        .matrix-quadrant.q3 { bottom: 0; left: 0; background: rgba(234, 179, 8, 0.05); }
+        .matrix-quadrant.q4 { bottom: 0; right: 0; background: rgba(239, 68, 68, 0.05); }
+
+        .matrix-point {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background-color: #4a9eff;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s;
+            transform: translate(-50%, -50%);
+        }
+
+        .matrix-point:hover {
+            width: 16px;
+            height: 16px;
+            background-color: #357abd;
+        }
+
+        .matrix-point.high-priority {
+            background-color: #ef4444;
+        }
+
+        .matrix-point.medium-priority {
+            background-color: #eab308;
+        }
+
+        .matrix-point.low-priority {
+            background-color: #22c55e;
+        }
+
+        /* Timeline View */
+        .timeline-container {
+            background-color: #2d2d2d;
+            border-radius: 12px;
+            padding: 2rem;
+            overflow-x: auto;
+        }
+
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .timeline-grid {
+            position: relative;
+            min-width: 800px;
+            height: 300px;
+        }
+
+        .timeline-axis {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background-color: #3a3a3a;
+        }
+
+        .timeline-bar {
+            position: absolute;
+            height: 40px;
+            background: linear-gradient(135deg, #4a9eff 0%, #357abd 100%);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            padding: 0 1rem;
+            color: #ffffff;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .timeline-bar:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(74, 158, 255, 0.3);
+        }
+
+        .timeline-bar.quick-wins {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        }
+
+        .timeline-bar.major {
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+        }
+
+        .timeline-bar.long-term {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background-color: #2d2d2d;
+            border-radius: 12px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem;
+            border-bottom: 2px solid #3a3a3a;
+        }
+
+        .modal-header h3 {
+            color: #ffffff;
+            margin: 0;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: #b0b0b0;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+
+        .modal-close:hover {
+            background-color: #3a3a3a;
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            padding: 1.5rem;
+            border-top: 2px solid #3a3a3a;
+        }
+
+        /* Bulk Actions Bar */
+        .bulk-actions-bar {
+            background-color: #2d2d2d;
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .bulk-actions-title {
+            color: #ffffff;
+            font-weight: 500;
+        }
+
+        /* Status Badge */
+        .status-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-badge.applied {
+            background-color: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+        }
+
+        .status-badge.pending {
+            background-color: rgba(74, 158, 255, 0.2);
+            color: #4a9eff;
+        }
+
+        .status-badge.skipped {
+            background-color: rgba(102, 102, 102, 0.2);
+            color: #999999;
+        }
+
+        /* Save/Load Section */
+        .save-load-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .save-card {
+            background-color: #2d2d2d;
+            border-radius: 12px;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .save-card:hover {
+            border-color: #4a9eff;
+            transform: translateY(-2px);
+        }
+
+        .save-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .save-card-title {
+            color: #ffffff;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .save-card-date {
+            color: #b0b0b0;
+            font-size: 0.85rem;
+        }
+
+        .save-card-stats {
+            display: flex;
+            gap: 1rem;
+            color: #b0b0b0;
+            font-size: 0.9rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .control-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .results-summary {
+                grid-template-columns: 1fr;
+            }
+
+            .tab-navigation {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .tab-button {
+                white-space: nowrap;
+            }
+
+            .dual-comparison {
+                grid-template-columns: 1fr;
+            }
+
+            .filters-section {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="header-content">
+            <h1>🤖 My AI Assistant</h1>
+            <nav>
+                <a href="index.html">Chat</a>
+                <a href="memories.html">Memories</a>
+                <a href="analysis.html">Analysis</a>
+                <a href="analysis-advanced.html" class="active">Advanced</a>
+                <a href="suggestions.html">Suggestions</a>
+                <a href="settings.html">Settings</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        <!-- Page Header -->
+        <div class="page-header">
+            <h2>Advanced Code Analysis</h2>
+            <p>Comprehensive code analysis with specialized profiles and deep insights</p>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="tab-navigation">
+            <button class="tab-button active" data-tab="quick-scan">Quick Scan</button>
+            <button class="tab-button" data-tab="detailed-results">Detailed Results</button>
+            <button class="tab-button" data-tab="project-overview">Project Overview</button>
+            <button class="tab-button" data-tab="dual-analysis">Dual Analysis</button>
+            <button class="tab-button" data-tab="improvement-roadmap">Improvement Roadmap</button>
+        </div>
+
+        <!-- Tab 1: Quick Scan -->
+        <div id="quick-scan" class="tab-content active">
+            <!-- Control Panel -->
+            <div class="control-panel">
+                <div class="control-grid">
+                    <!-- File/Project Selector -->
+                    <div class="control-section">
+                        <label for="fileInput">File or Project Path</label>
+                        <input 
+                            type="text" 
+                            id="fileInput" 
+                            placeholder="e.g., src/main.py or /path/to/project"
+                            value="sample_bad_performance.py">
+                    </div>
+
+                    <!-- Analysis Depth -->
+                    <div class="control-section">
+                        <label for="depthSelect">Analysis Depth</label>
+                        <select id="depthSelect">
+                            <option value="quick">Quick (Fast, basic checks)</option>
+                            <option value="standard" selected>Standard (Balanced)</option>
+                            <option value="full">Full (Comprehensive, slower)</option>
+                        </select>
+                    </div>
+
+                    <!-- Analyzer Profile -->
+                    <div class="control-section">
+                        <label for="profileSelect">Analyzer Profile</label>
+                        <select id="profileSelect">
+                            <option value="">Loading profiles...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Run Button -->
+                <div class="control-section" style="margin-top: 1.5rem;">
+                    <button id="runAnalysisBtn" class="btn btn-primary" onclick="runAnalysis()">
+                        🚀 Run Analysis
+                    </button>
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div id="loadingState" class="loading">
+                <div class="spinner"></div>
+                <p>Analyzing code...</p>
+            </div>
+
+            <!-- Results Summary -->
+            <div id="resultsContainer" style="display: none;">
+                <div class="results-summary">
+                    <!-- Overall Score Card -->
+                    <div class="summary-card">
+                        <h3>Overall Score</h3>
+                        <div class="score-gauge">
+                            <svg width="200" height="200" class="gauge-circle">
+                                <circle
+                                    cx="100"
+                                    cy="100"
+                                    r="90"
+                                    class="gauge-background"
+                                />
+                                <circle
+                                    id="gaugeProgress"
+                                    cx="100"
+                                    cy="100"
+                                    r="90"
+                                    class="gauge-progress"
+                                    stroke-dasharray="565.48"
+                                    stroke-dashoffset="565.48"
+                                />
+                            </svg>
+                            <div class="gauge-score">
+                                <div id="scoreValue" class="score-value">0</div>
+                                <div class="score-label">Score</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Issues Count by Priority -->
+                    <div class="summary-card">
+                        <h3>Issues by Priority</h3>
+                        <ul class="issues-list">
+                            <li class="issue-item">
+                                <div class="issue-label">
+                                    <span class="issue-badge critical">Critical</span>
+                                    <span>Critical Issues</span>
+                                </div>
+                                <span id="criticalCount" class="issue-count">0</span>
+                            </li>
+                            <li class="issue-item">
+                                <div class="issue-label">
+                                    <span class="issue-badge high">High</span>
+                                    <span>High Priority</span>
+                                </div>
+                                <span id="highCount" class="issue-count">0</span>
+                            </li>
+                            <li class="issue-item">
+                                <div class="issue-label">
+                                    <span class="issue-badge medium">Medium</span>
+                                    <span>Medium Priority</span>
+                                </div>
+                                <span id="mediumCount" class="issue-count">0</span>
+                            </li>
+                            <li class="issue-item">
+                                <div class="issue-label">
+                                    <span class="issue-badge low">Low</span>
+                                    <span>Low Priority</span>
+                                </div>
+                                <span id="lowCount" class="issue-count">0</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Category Breakdown -->
+                    <div class="summary-card">
+                        <h3>Issues by Category</h3>
+                        <div id="categoryBreakdown">
+                            <!-- Dynamic categories will be inserted here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analysis Details -->
+                <div class="control-panel" style="margin-top: 1.5rem;">
+                    <h3 style="margin-bottom: 1rem; color: #ffffff;">Analysis Details</h3>
+                    <div class="control-grid">
+                        <div>
+                            <strong style="color: #b0b0b0;">File Analyzed:</strong>
+                            <p id="analyzedFile" style="color: #ffffff; margin-top: 0.5rem;">-</p>
+                        </div>
+                        <div>
+                            <strong style="color: #b0b0b0;">Analysis Time:</strong>
+                            <p id="analysisTime" style="color: #ffffff; margin-top: 0.5rem;">-</p>
+                        </div>
+                        <div>
+                            <strong style="color: #b0b0b0;">Total Issues:</strong>
+                            <p id="totalIssues" style="color: #ffffff; margin-top: 0.5rem;">-</p>
+                        </div>
+                        <div>
+                            <strong style="color: #b0b0b0;">Lines of Code:</strong>
+                            <p id="linesOfCode" style="color: #ffffff; margin-top: 0.5rem;">-</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="empty-state">
+                <div class="empty-state-icon">📊</div>
+                <h3>No Analysis Results Yet</h3>
+                <p>Run an analysis to see detailed code insights and recommendations</p>
+            </div>
+        </div>
+
+        <!-- Tab 2: Detailed Results -->
+        <div id="detailed-results" class="tab-content">
+            <!-- Filters Section -->
+            <div class="control-panel">
+                <h3 style="margin-bottom: 1.5rem; color: #ffffff;">Filter Issues</h3>
+                <div class="filters-section">
+                    <!-- Search Box -->
+                    <div class="search-box">
+                        <input 
+                            type="text" 
+                            id="issueSearch" 
+                            class="search-input" 
+                            placeholder="Search by keyword, file, or description..."
+                            oninput="filterIssues()">
+                    </div>
+
+                    <!-- Category Filter -->
+                    <div class="control-section">
+                        <label for="categoryFilter">Category</label>
+                        <select id="categoryFilter" onchange="filterIssues()">
+                            <option value="">All Categories</option>
+                            <option value="Performance">Performance</option>
+                            <option value="Security">Security</option>
+                            <option value="Quality">Quality</option>
+                            <option value="Architecture">Architecture</option>
+                            <option value="Maintainability">Maintainability</option>
+                        </select>
+                    </div>
+
+                    <!-- Priority Filter -->
+                    <div class="control-section">
+                        <label for="priorityFilter">Priority</label>
+                        <select id="priorityFilter" onchange="filterIssues()">
+                            <option value="">All Priorities</option>
+                            <option value="critical">Critical</option>
+                            <option value="high">High</option>
+                            <option value="medium">Medium</option>
+                            <option value="low">Low</option>
+                        </select>
+                    </div>
+
+                    <!-- File Filter -->
+                    <div class="control-section">
+                        <label for="fileFilter">File</label>
+                        <select id="fileFilter" onchange="filterIssues()">
+                            <option value="">All Files</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Issues List -->
+            <div id="issuesList">
+                <div class="empty-state">
+                    <div class="empty-state-icon">🔍</div>
+                    <h3>No Issues to Display</h3>
+                    <p>Run an analysis to see detailed issues</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 3: Project Overview -->
+        <div id="project-overview" class="tab-content">
+            <!-- Hotspot Heatmap -->
+            <div class="control-panel">
+                <h3 style="margin-bottom: 1rem; color: #ffffff;">🔥 Hotspot Heatmap</h3>
+                <p style="color: #b0b0b0; margin-bottom: 1.5rem;">Files by issue density - darker colors indicate more issues</p>
+                <div id="heatmapGrid" class="heatmap-grid">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">�</div>
+                        <h3>No Data Available</h3>
+                        <p>Run an analysis to see hotspot visualization</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Technical Debt Tracker -->
+            <div class="control-panel" style="margin-top: 2rem;">
+                <h3 style="margin-bottom: 1rem; color: #ffffff;">💰 Technical Debt Tracker</h3>
+                <div class="debt-stat">
+                    <span class="debt-label">Total Estimated Hours</span>
+                    <span id="totalHours" class="debt-value hours">0</span>
+                </div>
+                <div class="debt-stat">
+                    <span class="debt-label">Critical Issues to Fix</span>
+                    <span id="criticalToFix" class="debt-value">0</span>
+                </div>
+                <div class="debt-stat">
+                    <span class="debt-label">Files Needing Attention</span>
+                    <span id="filesNeedingAttention" class="debt-value">0</span>
+                </div>
+                <div class="debt-stat">
+                    <span class="debt-label">Code Quality Score</span>
+                    <span id="qualityScore" class="debt-value">0/100</span>
+                </div>
+            </div>
+
+            <!-- Health Score Trends -->
+            <div class="control-panel" style="margin-top: 2rem;">
+                <h3 style="margin-bottom: 1rem; color: #ffffff;">📈 Health Score Trends</h3>
+                <p style="color: #b0b0b0; margin-bottom: 1.5rem;">Historical analysis scores</p>
+                <div id="trendChart" class="trend-chart">
+                    <div class="empty-state-icon" style="margin: auto; font-size: 2rem;">📉</div>
+                </div>
+            </div>
+
+            <!-- Top 10 Files Needing Attention -->
+            <div class="control-panel" style="margin-top: 2rem;">
+                <h3 style="margin-bottom: 1rem; color: #ffffff;">⚠️ Top 10 Files Needing Attention</h3>
+                <div id="topFilesList">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📁</div>
+                        <h3>No Data Available</h3>
+                        <p>Run an analysis to identify problematic files</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 4: Dual Analysis -->
+        <div id="dual-analysis" class="tab-content">
+            <!-- Dual Analysis Controls -->
+            <div class="control-panel">
+                <h3 style="margin-bottom: 1.5rem; color: #ffffff;">Run Dual Analyzer Comparison</h3>
+                <div class="control-grid">
+                    <!-- File Path -->
+                    <div class="control-section">
+                        <label for="dualFileInput">File or Project Path</label>
+                        <input 
+                            type="text" 
+                            id="dualFileInput" 
+                            placeholder="e.g., src/main.py"
+                            value="sample_bad_performance.py">
+                    </div>
+
+                    <!-- Profile A -->
+                    <div class="control-section">
+                        <label for="profileA">Analyzer A Profile</label>
+                        <select id="profileA">
+                            <option value="PERFORMANCE_EXPERT">Performance Expert</option>
+                            <option value="SECURITY_EXPERT">Security Expert</option>
+                            <option value="CODE_QUALITY_ANALYZER">Code Quality Analyzer</option>
+                            <option value="ARCHITECTURE_REVIEWER">Architecture Reviewer</option>
+                        </select>
+                    </div>
+
+                    <!-- Profile B -->
+                    <div class="control-section">
+                        <label for="profileB">Analyzer B Profile</label>
+                        <select id="profileB">
+                            <option value="PERFORMANCE_EXPERT">Performance Expert</option>
+                            <option value="SECURITY_EXPERT" selected>Security Expert</option>
+                            <option value="CODE_QUALITY_ANALYZER">Code Quality Analyzer</option>
+                            <option value="ARCHITECTURE_REVIEWER">Architecture Reviewer</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Run Button -->
+                <div class="control-section" style="margin-top: 1.5rem;">
+                    <button id="runDualBtn" class="btn btn-primary" onclick="runDualAnalysis()">
+                        🔀 Run Dual Analysis
+                    </button>
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div id="dualLoadingState" class="loading">
+                <div class="spinner"></div>
+                <p>Running dual analysis...</p>
+            </div>
+
+            <!-- Dual Comparison Results -->
+            <div id="dualResultsContainer" style="display: none;">
+                <!-- Side-by-side Analyzer Panels -->
+                <div class="dual-comparison">
+                    <!-- Analyzer A Panel -->
+                    <div class="analyzer-panel">
+                        <div class="analyzer-header">
+                            <div class="analyzer-icon">🔍</div>
+                            <div class="analyzer-title">
+                                <div class="analyzer-name" id="analyzerAName">Analyzer A</div>
+                                <div class="analyzer-type" id="analyzerAType">Performance Expert</div>
+                            </div>
+                        </div>
+                        <div id="analyzerAResults">
+                            <!-- Issues will be inserted here -->
+                        </div>
+                    </div>
+
+                    <!-- Analyzer B Panel -->
+                    <div class="analyzer-panel">
+                        <div class="analyzer-header">
+                            <div class="analyzer-icon">�️</div>
+                            <div class="analyzer-title">
+                                <div class="analyzer-name" id="analyzerBName">Analyzer B</div>
+                                <div class="analyzer-type" id="analyzerBType">Security Expert</div>
+                            </div>
+                        </div>
+                        <div id="analyzerBResults">
+                            <!-- Issues will be inserted here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Agreements Section -->
+                <div class="comparison-section">
+                    <h3 class="comparison-title">
+                        ✅ Agreements (Both Found Same Issue)
+                        <span id="agreementCount" style="color: #22c55e; font-size: 0.9rem;">(0)</span>
+                    </h3>
+                    <div id="agreementsList">
+                        <!-- Agreement items will be inserted here -->
+                    </div>
+                </div>
+
+                <!-- Disagreements Section -->
+                <div class="comparison-section">
+                    <h3 class="comparison-title">
+                        ⚠️ Disagreements (Found by One Analyzer Only)
+                        <span id="disagreementCount" style="color: #eab308; font-size: 0.9rem;">(0)</span>
+                    </h3>
+                    <div id="disagreementsList">
+                        <!-- Disagreement items will be inserted here -->
+                    </div>
+                </div>
+
+                <!-- Combined Recommendations -->
+                <div class="control-panel" style="margin-top: 2rem;">
+                    <h3 style="margin-bottom: 1rem; color: #ffffff;">🎯 Combined Recommendations</h3>
+                    <div id="combinedRecommendations">
+                        <p style="color: #b0b0b0;">Analyzing combined results...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <div id="dualEmptyState" class="empty-state">
+                <div class="empty-state-icon">🔀</div>
+                <h3>No Dual Analysis Results Yet</h3>
+                <p>Run a dual analysis to compare findings from two different analyzer profiles</p>
+            </div>
+        </div>
+
+        <!-- Tab 5: Improvement Roadmap -->
+        <div id="improvement-roadmap" class="tab-content">
+            <!-- Bulk Actions Bar -->
+            <div class="bulk-actions-bar">
+                <div class="bulk-actions-title">📦 Bulk Actions</div>
+                <div class="btn-group">
+                    <button class="btn btn-secondary btn-small" onclick="exportAllPrompts()">
+                        💾 Export All Prompts
+                    </button>
+                    <button class="btn btn-secondary btn-small" onclick="copyTopPrompts()">
+                        📋 Copy Top 5
+                    </button>
+                    <button class="btn btn-secondary btn-small" onclick="generateReport()">
+                        📄 Generate Report
+                    </button>
+                    <button class="btn btn-secondary btn-small" onclick="saveAnalysis()">
+                        💼 Save Analysis
+                    </button>
+                    <button class="btn btn-secondary btn-small" onclick="showLoadAnalysis()">
+                        📂 Load Analysis
+                    </button>
+                </div>
+            </div>
+
+            <!-- Quick Wins Section -->
+            <div class="roadmap-section">
+                <div class="roadmap-header">
+                    <div class="roadmap-title">
+                        <h3>⚡ Quick Wins</h3>
+                        <span class="roadmap-badge quick-wins">< 1 hour each</span>
+                    </div>
+                    <div class="roadmap-stats">
+                        <span><strong id="quickWinsCount">0</strong> issues</span>
+                        <span><strong id="quickWinsHours">0</strong> hours total</span>
+                    </div>
+                </div>
+                <div id="quickWinsList" class="roadmap-items">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">⚡</div>
+                        <h3>No Quick Wins Available</h3>
+                        <p>Run an analysis to see quick improvement opportunities</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Major Refactors Section -->
+            <div class="roadmap-section">
+                <div class="roadmap-header">
+                    <div class="roadmap-title">
+                        <h3>🔨 Major Refactors</h3>
+                        <span class="roadmap-badge major">1-8 hours each</span>
+                    </div>
+                    <div class="roadmap-stats">
+                        <span><strong id="majorCount">0</strong> issues</span>
+                        <span><strong id="majorHours">0</strong> hours total</span>
+                    </div>
+                </div>
+                <div id="majorList" class="roadmap-items">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🔨</div>
+                        <h3>No Major Refactors</h3>
+                        <p>Run an analysis to see major improvement opportunities</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Long-term Projects Section -->
+            <div class="roadmap-section">
+                <div class="roadmap-header">
+                    <div class="roadmap-title">
+                        <h3>🎯 Long-term Projects</h3>
+                        <span class="roadmap-badge long-term">> 8 hours each</span>
+                    </div>
+                    <div class="roadmap-stats">
+                        <span><strong id="longTermCount">0</strong> issues</span>
+                        <span><strong id="longTermHours">0</strong> hours total</span>
+                    </div>
+                </div>
+                <div id="longTermList" class="roadmap-items">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🎯</div>
+                        <h3>No Long-term Projects</h3>
+                        <p>Run an analysis to see long-term improvement opportunities</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Effort vs Impact Matrix -->
+            <div class="matrix-container">
+                <h3 style="margin-bottom: 1.5rem; color: #ffffff;">📊 Effort vs Impact Matrix</h3>
+                <div class="matrix-grid">
+                    <div class="matrix-quadrant q1">High Impact<br>Low Effort<br>(Do First)</div>
+                    <div class="matrix-quadrant q2">High Impact<br>High Effort<br>(Plan Carefully)</div>
+                    <div class="matrix-quadrant q3">Low Impact<br>High Effort<br>(Avoid)</div>
+                    <div class="matrix-quadrant q4">Low Impact<br>Low Effort<br>(Fill Time)</div>
+                    <div id="matrixPoints"></div>
+                    <div class="matrix-axis matrix-x-axis">Effort (Hours) →</div>
+                    <div class="matrix-axis matrix-y-axis">Impact (Priority Score) →</div>
+                </div>
+            </div>
+
+            <!-- Timeline View -->
+            <div class="timeline-container">
+                <div class="timeline-header">
+                    <h3 style="color: #ffffff; margin: 0;">📅 Implementation Timeline</h3>
+                    <div style="color: #b0b0b0; font-size: 0.9rem;">
+                        Estimated completion: <span id="timelineEstimate">0 hours</span>
+                    </div>
+                </div>
+                <div class="timeline-grid" id="timelineGrid">
+                    <div class="timeline-axis"></div>
+                    <div class="empty-state-icon" style="margin: auto; font-size: 2rem;">📅</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Issue Details Modal -->
+    <div id="issueModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Issue Details</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Content will be inserted here -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+                <button class="btn btn-primary" onclick="copyModalPrompt()">Copy Prompt</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API Base URL
+        const API_BASE = 'http://localhost:8000';
+
+        // Global state
+        let currentProfile = null;
+        let analysisResults = null;
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', () => {
+            loadProfiles();
+            setupTabNavigation();
+        });
+
+        // Tab Navigation
+        function setupTabNavigation() {
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const tabId = button.getAttribute('data-tab');
+
+                    // Remove active class from all buttons and contents
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    tabContents.forEach(content => content.classList.remove('active'));
+
+                    // Add active class to clicked button and corresponding content
+                    button.classList.add('active');
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+        }
+
+        // Load Analyzer Profiles
+        async function loadProfiles() {
+            const profileSelect = document.getElementById('profileSelect');
+
+            try {
+                const response = await fetch(`${API_BASE}/api/analyze/profiles`);
+                
+                if (!response.ok) {
+                    throw new Error('Failed to load profiles');
+                }
+
+                const profiles = await response.json();
+
+                // Clear loading option
+                profileSelect.innerHTML = '';
+
+                // Add default option
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.textContent = 'Standard Analysis (All checks)';
+                profileSelect.appendChild(defaultOption);
+
+                // Add profile options
+                profiles.forEach(profile => {
+                    const option = document.createElement('option');
+                    option.value = profile.name;
+                    option.textContent = `${profile.name} - ${profile.description}`;
+                    profileSelect.appendChild(option);
+                });
+
+                console.log('Profiles loaded:', profiles);
+            } catch (error) {
+                console.error('Error loading profiles:', error);
+                
+                // Fallback profiles
+                profileSelect.innerHTML = `
+                    <option value="">Standard Analysis (All checks)</option>
+                    <option value="performance">Performance - Speed & efficiency focus</option>
+                    <option value="security">Security - Vulnerability detection</option>
+                    <option value="quality">Quality - Code maintainability</option>
+                    <option value="architecture">Architecture - Design patterns</option>
+                `;
+            }
+        }
+
+        // Run Analysis
+        async function runAnalysis() {
+            const fileInput = document.getElementById('fileInput');
+            const depthSelect = document.getElementById('depthSelect');
+            const profileSelect = document.getElementById('profileSelect');
+            const runBtn = document.getElementById('runAnalysisBtn');
+            const loadingState = document.getElementById('loadingState');
+            const resultsContainer = document.getElementById('resultsContainer');
+            const emptyState = document.getElementById('emptyState');
+
+            // Validate input
+            const filePath = fileInput.value.trim();
+            if (!filePath) {
+                alert('Please enter a file or project path');
+                return;
+            }
+
+            // Get selected values
+            const depth = depthSelect.value;
+            const profile = profileSelect.value;
+
+            // Show loading state
+            loadingState.classList.add('active');
+            resultsContainer.style.display = 'none';
+            emptyState.style.display = 'none';
+            runBtn.disabled = true;
+
+            try {
+                const requestBody = {
+                    file_path: filePath,
+                    analysis_depth: depth
+                };
+
+                // Add profile if selected
+                if (profile) {
+                    requestBody.profile = profile;
+                }
+
+                console.log('Sending analysis request:', requestBody);
+
+                const response = await fetch(`${API_BASE}/api/analyze/advanced`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Analysis failed');
+                }
+
+                const results = await response.json();
+                console.log('Analysis results:', results);
+
+                // Store results
+                analysisResults = results;
+
+                // Display results
+                displayResults(results);
+            } catch (error) {
+                console.error('Analysis error:', error);
+                
+                // Show error alert
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-error';
+                alertDiv.innerHTML = `
+                    <span class="alert-icon">⚠️</span>
+                    <span>Analysis failed: ${error.message}</span>
+                `;
+                
+                const mainElement = document.querySelector('main');
+                const tabContent = document.getElementById('quick-scan');
+                tabContent.insertBefore(alertDiv, loadingState);
+                
+                setTimeout(() => alertDiv.remove(), 5000);
+                
+                emptyState.style.display = 'block';
+            } finally {
+                loadingState.classList.remove('active');
+                runBtn.disabled = false;
+            }
+        }
+
+        // Display Analysis Results
+        function displayResults(results) {
+            const resultsContainer = document.getElementById('resultsContainer');
+            const emptyState = document.getElementById('emptyState');
+
+            // Show results container
+            resultsContainer.style.display = 'block';
+            emptyState.style.display = 'none';
+
+            // Update overall score
+            const score = results.overall_score || 0;
+            updateScoreGauge(score);
+
+            // Update issue counts by priority
+            document.getElementById('criticalCount').textContent = results.critical_issues || 0;
+            document.getElementById('highCount').textContent = results.high_issues || 0;
+            document.getElementById('mediumCount').textContent = results.medium_issues || 0;
+            document.getElementById('lowCount').textContent = results.low_issues || 0;
+
+            // Update category breakdown
+            updateCategoryBreakdown(results.issues_by_category || {});
+
+            // Update analysis details
+            document.getElementById('analyzedFile').textContent = results.file_path || 'Unknown';
+            document.getElementById('analysisTime').textContent = new Date(results.timestamp).toLocaleString();
+            document.getElementById('totalIssues').textContent = results.total_issues || 0;
+            document.getElementById('linesOfCode').textContent = results.code_metrics?.lines_of_code || 'N/A';
+        }
+
+        // Update Score Gauge
+        function updateScoreGauge(score) {
+            const scoreValue = document.getElementById('scoreValue');
+            const gaugeProgress = document.getElementById('gaugeProgress');
+
+            // Animate score
+            let currentScore = 0;
+            const targetScore = Math.round(score);
+            const increment = targetScore / 50;
+
+            const scoreInterval = setInterval(() => {
+                currentScore += increment;
+                if (currentScore >= targetScore) {
+                    currentScore = targetScore;
+                    clearInterval(scoreInterval);
+                }
+                scoreValue.textContent = Math.round(currentScore);
+            }, 20);
+
+            // Update gauge circle
+            const circumference = 2 * Math.PI * 90; // radius = 90
+            const offset = circumference - (score / 100) * circumference;
+            gaugeProgress.style.strokeDashoffset = offset;
+
+            // Change color based on score
+            if (score >= 80) {
+                gaugeProgress.style.stroke = '#22c55e'; // Green
+            } else if (score >= 60) {
+                gaugeProgress.style.stroke = '#4a9eff'; // Blue
+            } else if (score >= 40) {
+                gaugeProgress.style.stroke = '#eab308'; // Yellow
+            } else {
+                gaugeProgress.style.stroke = '#ef4444'; // Red
+            }
+        }
+
+        // Update Category Breakdown
+        function updateCategoryBreakdown(categories) {
+            const container = document.getElementById('categoryBreakdown');
+            container.innerHTML = '';
+
+            if (Object.keys(categories).length === 0) {
+                container.innerHTML = '<p style="color: #666666;">No issues found</p>';
+                return;
+            }
+
+            // Calculate total issues
+            const totalIssues = Object.values(categories).reduce((sum, issues) => sum + issues.length, 0);
+
+            // Create bars for each category
+            Object.entries(categories).forEach(([category, issues]) => {
+                const count = issues.length;
+                const percentage = totalIssues > 0 ? (count / totalIssues) * 100 : 0;
+
+                const barHtml = `
+                    <div class="category-bar">
+                        <div class="category-header">
+                            <span class="category-name">${category}</span>
+                            <span class="category-value">${count}</span>
+                        </div>
+                        <div class="category-progress">
+                            <div class="category-progress-bar" style="width: ${percentage}%"></div>
+                        </div>
+                    </div>
+                `;
+
+                container.innerHTML += barHtml;
+            });
+        }
+
+        // ==================== TAB 2: DETAILED RESULTS ====================
+
+        // Global storage for issues
+        let allIssues = [];
+
+        // Filter Issues
+        function filterIssues() {
+            const searchTerm = document.getElementById('issueSearch').value.toLowerCase();
+            const categoryFilter = document.getElementById('categoryFilter').value;
+            const priorityFilter = document.getElementById('priorityFilter').value;
+            const fileFilter = document.getElementById('fileFilter').value;
+
+            const filteredIssues = allIssues.filter(issue => {
+                const matchesSearch = !searchTerm || 
+                    issue.title.toLowerCase().includes(searchTerm) ||
+                    issue.description.toLowerCase().includes(searchTerm) ||
+                    issue.file.toLowerCase().includes(searchTerm);
+                
+                const matchesCategory = !categoryFilter || issue.category === categoryFilter;
+                const matchesPriority = !priorityFilter || issue.priority === priorityFilter;
+                const matchesFile = !fileFilter || issue.file === fileFilter;
+
+                return matchesSearch && matchesCategory && matchesPriority && matchesFile;
+            });
+
+            displayDetailedResults(filteredIssues);
+        }
+
+        // Display Detailed Results
+        function displayDetailedResults(issues) {
+            const issuesList = document.getElementById('issuesList');
+            
+            if (!issues || issues.length === 0) {
+                issuesList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🔍</div>
+                        <h3>No Issues Match Your Filters</h3>
+                        <p>Try adjusting your search criteria</p>
+                    </div>
+                `;
+                return;
+            }
+
+            issuesList.innerHTML = '';
+
+            issues.forEach((issue, index) => {
+                const issueCard = document.createElement('div');
+                issueCard.className = `issue-card ${issue.priority} ${issue.status || 'pending'}`;
+                issueCard.setAttribute('data-index', index);
+                issueCard.innerHTML = `
+                    <div class="issue-header">
+                        <div>
+                            <div class="issue-title">${issue.title}</div>
+                            <div class="issue-meta">
+                                <span class="issue-badge ${issue.priority}">${issue.priority.toUpperCase()}</span>
+                                <span>${issue.category}</span>
+                                <span class="issue-location">
+                                    📄 ${issue.file}:${issue.line || 'N/A'}
+                                </span>
+                                ${issue.status ? `<span class="status-badge ${issue.status}">${issue.status}</span>` : ''}
+                            </div>
+                        </div>
+                        <div class="btn-group">
+                            <button class="btn btn-secondary btn-small btn-icon" onclick="copyPrompt(${index})" title="Copy prompt to clipboard">
+                                📋
+                            </button>
+                            <button class="btn btn-success btn-small btn-icon" onclick="markAsApplied(${index})" title="Mark as applied">
+                                ✓
+                            </button>
+                            <button class="btn btn-warning btn-small btn-icon" onclick="skipIssue(${index})" title="Skip this issue">
+                                ⊘
+                            </button>
+                            <button class="btn btn-primary btn-small btn-icon" onclick="viewIssueDetails(${index})" title="View full details">
+                                👁
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="issue-description">
+                        ${issue.description}
+                    </div>
+
+                    <!-- Collapsible Copilot Prompt -->
+                    <div class="collapsible" onclick="toggleCollapsible(this)">
+                        <span class="collapsible-title">💬 Copilot Prompt</span>
+                        <span class="collapsible-icon">▼</span>
+                    </div>
+                    <div class="collapsible-content">
+                        <div class="collapsible-inner">
+                            <pre style="white-space: pre-wrap; color: #e0e0e0; margin: 0;">${issue.prompt || 'No prompt available'}</pre>
+                        </div>
+                    </div>
+
+                    <!-- Collapsible Code Preview -->
+                    <div class="collapsible" onclick="toggleCollapsible(this)">
+                        <span class="collapsible-title">💻 Code Preview</span>
+                        <span class="collapsible-icon">▼</span>
+                    </div>
+                    <div class="collapsible-content">
+                        <div class="collapsible-inner">
+                            <div class="code-preview">
+                                ${generateCodePreview(issue)}
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                issuesList.appendChild(issueCard);
+            });
+        }
+
+        // Toggle Collapsible Sections
+        function toggleCollapsible(element) {
+            element.classList.toggle('active');
+            const content = element.nextElementSibling;
+            content.classList.toggle('active');
+        }
+
+        // Generate Code Preview with Syntax Highlighting
+        function generateCodePreview(issue) {
+            if (!issue.code_snippet) {
+                return '<p style="color: #666666;">No code preview available</p>';
+            }
+
+            const lines = issue.code_snippet.split('\n');
+            const startLine = issue.line ? Math.max(1, issue.line - 2) : 1;
+            
+            return lines.map((line, idx) => {
+                const lineNum = startLine + idx;
+                const isHighlighted = lineNum === issue.line;
+                return `
+                    <div class="code-line">
+                        <span class="line-number">${lineNum}</span>
+                        <span class="line-content ${isHighlighted ? 'highlight' : ''}">${escapeHtml(line)}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Copy Prompt to Clipboard
+        function copyPrompt(index) {
+            const issue = allIssues[index];
+            const prompt = issue.prompt || 'No prompt available';
+            
+            navigator.clipboard.writeText(prompt).then(() => {
+                // Show success notification
+                const btn = event.target.closest('button');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '✅ Copied!';
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+                alert('Failed to copy to clipboard');
+            });
+        }
+
+        // Populate File Filter Dropdown
+        function populateFileFilter(issues) {
+            const fileFilter = document.getElementById('fileFilter');
+            const files = [...new Set(issues.map(issue => issue.file))];
+            
+            fileFilter.innerHTML = '<option value="">All Files</option>';
+            files.forEach(file => {
+                const option = document.createElement('option');
+                option.value = file;
+                option.textContent = file;
+                fileFilter.appendChild(option);
+            });
+        }
+
+        // ==================== TAB 3: PROJECT OVERVIEW ====================
+
+        // Display Project Overview
+        function displayProjectOverview(data) {
+            // Update Technical Debt Stats
+            document.getElementById('totalHours').textContent = data.total_hours || 0;
+            document.getElementById('criticalToFix').textContent = data.critical_count || 0;
+            document.getElementById('filesNeedingAttention').textContent = data.files_count || 0;
+            document.getElementById('qualityScore').textContent = `${data.quality_score || 0}/100`;
+
+            // Display Hotspot Heatmap
+            displayHeatmap(data.hotspots || []);
+
+            // Display Health Trends
+            displayTrends(data.health_trends || []);
+
+            // Display Top Files
+            displayTopFiles(data.top_files || []);
+        }
+
+        // Display Hotspot Heatmap
+        function displayHeatmap(hotspots) {
+            const heatmapGrid = document.getElementById('heatmapGrid');
+            
+            if (!hotspots || hotspots.length === 0) {
+                heatmapGrid.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📊</div>
+                        <h3>No Hotspot Data</h3>
+                        <p>Run an analysis to see file hotspots</p>
+                    </div>
+                `;
+                return;
+            }
+
+            heatmapGrid.innerHTML = '';
+
+            hotspots.forEach(hotspot => {
+                const severity = getSeverityLevel(hotspot.issue_count);
+                const cell = document.createElement('div');
+                cell.className = `heatmap-cell severity-${severity}`;
+                cell.innerHTML = `
+                    <span>${hotspot.issue_count}</span>
+                    <div class="heatmap-tooltip">
+                        ${hotspot.file}<br>
+                        ${hotspot.issue_count} issues
+                    </div>
+                `;
+                heatmapGrid.appendChild(cell);
+            });
+        }
+
+        // Get Severity Level for Heatmap
+        function getSeverityLevel(count) {
+            if (count === 0) return 'none';
+            if (count <= 2) return 'low';
+            if (count <= 5) return 'medium';
+            if (count <= 10) return 'high';
+            return 'critical';
+        }
+
+        // Display Health Trends
+        function displayTrends(trends) {
+            const trendChart = document.getElementById('trendChart');
+            
+            if (!trends || trends.length === 0) {
+                trendChart.innerHTML = '<div class="empty-state-icon" style="margin: auto; font-size: 2rem;">📉</div>';
+                return;
+            }
+
+            trendChart.innerHTML = '';
+
+            const maxScore = Math.max(...trends.map(t => t.score));
+
+            trends.forEach((trend, idx) => {
+                const height = (trend.score / maxScore) * 180; // Max height 180px
+                const bar = document.createElement('div');
+                bar.className = 'trend-bar';
+                bar.style.height = `${height}px`;
+                bar.innerHTML = `<div class="trend-label">${trend.date}</div>`;
+                bar.title = `Score: ${trend.score}`;
+                trendChart.appendChild(bar);
+            });
+        }
+
+        // Display Top Files
+        function displayTopFiles(topFiles) {
+            const topFilesList = document.getElementById('topFilesList');
+            
+            if (!topFiles || topFiles.length === 0) {
+                topFilesList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📁</div>
+                        <h3>No Data Available</h3>
+                        <p>Run an analysis to identify problematic files</p>
+                    </div>
+                `;
+                return;
+            }
+
+            topFilesList.innerHTML = '';
+
+            topFiles.slice(0, 10).forEach((file, idx) => {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-list-item';
+                fileItem.innerHTML = `
+                    <div class="file-info">
+                        <div class="file-name">${idx + 1}. ${file.name}</div>
+                        <div class="file-stats">
+                            <span>🔴 ${file.critical || 0} Critical</span>
+                            <span>🟠 ${file.high || 0} High</span>
+                            <span>🟡 ${file.medium || 0} Medium</span>
+                            <span>📊 ${file.total || 0} Total Issues</span>
+                        </div>
+                    </div>
+                    <div class="file-score">
+                        <div class="file-score-value">${file.score || 0}</div>
+                        <div style="color: #b0b0b0; font-size: 0.75rem;">Risk Score</div>
+                    </div>
+                `;
+                topFilesList.appendChild(fileItem);
+            });
+        }
+
+        // ==================== TAB 4: DUAL ANALYSIS ====================
+
+        // Global storage for dual analysis
+        let dualAnalysisData = null;
+
+        // Run Dual Analysis
+        async function runDualAnalysis() {
+            const fileInput = document.getElementById('dualFileInput');
+            const profileA = document.getElementById('profileA');
+            const profileB = document.getElementById('profileB');
+            const runBtn = document.getElementById('runDualBtn');
+            const loadingState = document.getElementById('dualLoadingState');
+            const resultsContainer = document.getElementById('dualResultsContainer');
+            const emptyState = document.getElementById('dualEmptyState');
+
+            // Validate input
+            const filePath = fileInput.value.trim();
+            if (!filePath) {
+                alert('Please enter a file path');
+                return;
+            }
+
+            // Show loading state
+            loadingState.classList.add('active');
+            resultsContainer.style.display = 'none';
+            emptyState.style.display = 'none';
+            runBtn.disabled = true;
+
+            try {
+                const requestBody = {
+                    file_path: filePath,
+                    profile_a: profileA.value,
+                    profile_b: profileB.value
+                };
+
+                console.log('Sending dual analysis request:', requestBody);
+
+                const response = await fetch(`${API_BASE}/api/analyze/dual`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Dual analysis failed');
+                }
+
+                const results = await response.json();
+                console.log('Dual analysis results:', results);
+
+                // Store results
+                dualAnalysisData = results;
+
+                // Display results
+                displayDualResults(results);
+            } catch (error) {
+                console.error('Dual analysis error:', error);
+                
+                // Show error alert
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-error';
+                alertDiv.innerHTML = `
+                    <span class="alert-icon">⚠️</span>
+                    <span>Dual analysis failed: ${error.message}</span>
+                `;
+                
+                const tabContent = document.getElementById('dual-analysis');
+                tabContent.insertBefore(alertDiv, loadingState);
+                
+                setTimeout(() => alertDiv.remove(), 5000);
+                
+                emptyState.style.display = 'block';
+            } finally {
+                loadingState.classList.remove('active');
+                runBtn.disabled = false;
+            }
+        }
+
+        // Display Dual Analysis Results
+        function displayDualResults(results) {
+            const resultsContainer = document.getElementById('dualResultsContainer');
+            const emptyState = document.getElementById('dualEmptyState');
+
+            // Show results container
+            resultsContainer.style.display = 'block';
+            emptyState.style.display = 'none';
+
+            // Update analyzer names
+            document.getElementById('analyzerAName').textContent = results.analyzer_a.name;
+            document.getElementById('analyzerAType').textContent = results.analyzer_a.profile;
+            document.getElementById('analyzerBName').textContent = results.analyzer_b.name;
+            document.getElementById('analyzerBType').textContent = results.analyzer_b.profile;
+
+            // Display individual analyzer results
+            displayAnalyzerResults('analyzerAResults', results.analyzer_a.issues || []);
+            displayAnalyzerResults('analyzerBResults', results.analyzer_b.issues || []);
+
+            // Display agreements
+            displayAgreements(results.agreements || []);
+
+            // Display disagreements
+            displayDisagreements(results.disagreements || []);
+
+            // Display combined recommendations
+            displayCombinedRecommendations(results.combined_recommendations || {});
+        }
+
+        // Display Analyzer Results in Panel
+        function displayAnalyzerResults(containerId, issues) {
+            const container = document.getElementById(containerId);
+            
+            if (!issues || issues.length === 0) {
+                container.innerHTML = '<p style="color: #666666;">No issues found</p>';
+                return;
+            }
+
+            container.innerHTML = `
+                <div style="margin-bottom: 1rem;">
+                    <strong style="color: #ffffff;">Total Issues: ${issues.length}</strong>
+                </div>
+            `;
+
+            // Group by priority
+            const grouped = {
+                critical: issues.filter(i => i.priority === 'critical').length,
+                high: issues.filter(i => i.priority === 'high').length,
+                medium: issues.filter(i => i.priority === 'medium').length,
+                low: issues.filter(i => i.priority === 'low').length
+            };
+
+            const statsHtml = `
+                <ul class="issues-list">
+                    <li class="issue-item">
+                        <div class="issue-label">
+                            <span class="issue-badge critical">Critical</span>
+                        </div>
+                        <span class="issue-count">${grouped.critical}</span>
+                    </li>
+                    <li class="issue-item">
+                        <div class="issue-label">
+                            <span class="issue-badge high">High</span>
+                        </div>
+                        <span class="issue-count">${grouped.high}</span>
+                    </li>
+                    <li class="issue-item">
+                        <div class="issue-label">
+                            <span class="issue-badge medium">Medium</span>
+                        </div>
+                        <span class="issue-count">${grouped.medium}</span>
+                    </li>
+                    <li class="issue-item">
+                        <div class="issue-label">
+                            <span class="issue-badge low">Low</span>
+                        </div>
+                        <span class="issue-count">${grouped.low}</span>
+                    </li>
+                </ul>
+            `;
+
+            container.innerHTML += statsHtml;
+        }
+
+        // Display Agreements
+        function displayAgreements(agreements) {
+            const agreementsList = document.getElementById('agreementsList');
+            const agreementCount = document.getElementById('agreementCount');
+
+            agreementCount.textContent = `(${agreements.length})`;
+
+            if (agreements.length === 0) {
+                agreementsList.innerHTML = '<p style="color: #666666;">No common issues found by both analyzers</p>';
+                return;
+            }
+
+            agreementsList.innerHTML = '';
+
+            agreements.forEach(agreement => {
+                const item = document.createElement('div');
+                item.className = 'agreement-item';
+                item.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <strong style="color: #ffffff;">${agreement.title}</strong>
+                        <span class="issue-badge ${agreement.priority}">${agreement.priority.toUpperCase()}</span>
+                    </div>
+                    <p style="color: #b0b0b0; font-size: 0.9rem; margin-bottom: 0.5rem;">
+                        ${agreement.description}
+                    </p>
+                    <div style="color: #22c55e; font-size: 0.85rem;">
+                        ✓ Both analyzers agree this is a ${agreement.category} issue
+                    </div>
+                `;
+                agreementsList.appendChild(item);
+            });
+        }
+
+        // Display Disagreements
+        function displayDisagreements(disagreements) {
+            const disagreementsList = document.getElementById('disagreementsList');
+            const disagreementCount = document.getElementById('disagreementCount');
+
+            disagreementCount.textContent = `(${disagreements.length})`;
+
+            if (disagreements.length === 0) {
+                disagreementsList.innerHTML = '<p style="color: #666666;">No unique issues found by individual analyzers</p>';
+                return;
+            }
+
+            disagreementsList.innerHTML = '';
+
+            disagreements.forEach(disagreement => {
+                const item = document.createElement('div');
+                item.className = 'disagreement-item';
+                item.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <strong style="color: #ffffff;">${disagreement.title}</strong>
+                        <span class="issue-badge ${disagreement.priority}">${disagreement.priority.toUpperCase()}</span>
+                    </div>
+                    <p style="color: #b0b0b0; font-size: 0.9rem; margin-bottom: 0.5rem;">
+                        ${disagreement.description}
+                    </p>
+                    <div style="color: #eab308; font-size: 0.85rem;">
+                        ⚠ Found only by ${disagreement.found_by}
+                    </div>
+                `;
+                disagreementsList.appendChild(item);
+            });
+        }
+
+        // Display Combined Recommendations
+        function displayCombinedRecommendations(recommendations) {
+            const container = document.getElementById('combinedRecommendations');
+
+            if (!recommendations || Object.keys(recommendations).length === 0) {
+                container.innerHTML = '<p style="color: #666666;">No combined recommendations available</p>';
+                return;
+            }
+
+            let html = '';
+
+            if (recommendations.priority_actions) {
+                html += `
+                    <div style="margin-bottom: 1.5rem;">
+                        <h4 style="color: #ffffff; margin-bottom: 0.75rem;">🔥 Priority Actions</h4>
+                        <ul style="list-style: none; padding: 0;">
+                            ${recommendations.priority_actions.map(action => 
+                                `<li style="padding: 0.5rem 0; color: #e0e0e0;">• ${action}</li>`
+                            ).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+
+            if (recommendations.consensus_issues) {
+                html += `
+                    <div style="margin-bottom: 1.5rem;">
+                        <h4 style="color: #ffffff; margin-bottom: 0.75rem;">✅ Consensus Issues (High Confidence)</h4>
+                        <p style="color: #b0b0b0;">${recommendations.consensus_issues}</p>
+                    </div>
+                `;
+            }
+
+            if (recommendations.suggested_order) {
+                html += `
+                    <div>
+                        <h4 style="color: #ffffff; margin-bottom: 0.75rem;">📋 Suggested Fix Order</h4>
+                        <ol style="padding-left: 1.5rem; color: #e0e0e0;">
+                            ${recommendations.suggested_order.map(step => 
+                                `<li style="padding: 0.25rem 0;">${step}</li>`
+                            ).join('')}
+                        </ol>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = html;
+        }
+
+        // Utility: Escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Update displayResults to populate Tab 2 and Tab 3
+        const originalDisplayResults = displayResults;
+        displayResults = function(results) {
+            // Call original function for Tab 1
+            originalDisplayResults(results);
+
+            // Populate detailed results (Tab 2)
+            if (results.issues) {
+                allIssues = results.issues.map(issue => ({
+                    title: issue.title || 'Untitled Issue',
+                    description: issue.description || '',
+                    file: issue.file || 'Unknown',
+                    line: issue.line || null,
+                    category: issue.category || 'General',
+                    priority: issue.priority || 'medium',
+                    prompt: issue.copilot_prompt || '',
+                    code_snippet: issue.code_snippet || ''
+                }));
+
+                populateFileFilter(allIssues);
+                displayDetailedResults(allIssues);
+            }
+
+            // Populate project overview (Tab 3)
+            const overviewData = {
+                total_hours: results.total_estimated_hours || 0,
+                critical_count: results.critical_issues || 0,
+                files_count: results.files_analyzed || 1,
+                quality_score: results.overall_score || 0,
+                hotspots: results.hotspots || [],
+                health_trends: results.health_trends || [],
+                top_files: results.top_files || []
+            };
+
+            displayProjectOverview(overviewData);
+
+            // Load roadmap for Tab 5
+            if (results.file_path) {
+                loadRoadmap(results.file_path);
+            }
+        };
+
+        // ==================== TAB 5: IMPROVEMENT ROADMAP ====================
+
+        // Global storage for roadmap
+        let roadmapData = null;
+        let currentModalIssue = null;
+
+        // Load Roadmap
+        async function loadRoadmap(filePath) {
+            try {
+                const response = await fetch(`${API_BASE}/api/analyze/roadmap?file=${encodeURIComponent(filePath)}`);
+                
+                if (!response.ok) {
+                    console.warn('Roadmap API not available, generating from current issues');
+                    generateRoadmapFromIssues();
+                    return;
+                }
+
+                const roadmap = await response.json();
+                roadmapData = roadmap;
+                displayRoadmap(roadmap);
+            } catch (error) {
+                console.error('Error loading roadmap:', error);
+                // Generate roadmap from current issues as fallback
+                generateRoadmapFromIssues();
+            }
+        }
+
+        // Generate Roadmap from Current Issues (Fallback)
+        function generateRoadmapFromIssues() {
+            if (!allIssues || allIssues.length === 0) return;
+
+            // Categorize issues by estimated effort
+            const quickWins = allIssues.filter(issue => (issue.estimated_hours || 1) < 1);
+            const major = allIssues.filter(issue => {
+                const hours = issue.estimated_hours || 2;
+                return hours >= 1 && hours <= 8;
+            });
+            const longTerm = allIssues.filter(issue => (issue.estimated_hours || 10) > 8);
+
+            roadmapData = {
+                quick_wins: quickWins,
+                major_refactors: major,
+                long_term: longTerm
+            };
+
+            displayRoadmap(roadmapData);
+        }
+
+        // Display Roadmap
+        function displayRoadmap(roadmap) {
+            // Display Quick Wins
+            displayRoadmapSection('quickWinsList', roadmap.quick_wins || [], 'quick-wins');
+            document.getElementById('quickWinsCount').textContent = (roadmap.quick_wins || []).length;
+            document.getElementById('quickWinsHours').textContent = 
+                calculateTotalHours(roadmap.quick_wins || []).toFixed(1);
+
+            // Display Major Refactors
+            displayRoadmapSection('majorList', roadmap.major_refactors || [], 'major');
+            document.getElementById('majorCount').textContent = (roadmap.major_refactors || []).length;
+            document.getElementById('majorHours').textContent = 
+                calculateTotalHours(roadmap.major_refactors || []).toFixed(1);
+
+            // Display Long-term
+            displayRoadmapSection('longTermList', roadmap.long_term || [], 'long-term');
+            document.getElementById('longTermCount').textContent = (roadmap.long_term || []).length;
+            document.getElementById('longTermHours').textContent = 
+                calculateTotalHours(roadmap.long_term || []).toFixed(1);
+
+            // Display Effort vs Impact Matrix
+            displayEffortImpactMatrix([
+                ...(roadmap.quick_wins || []),
+                ...(roadmap.major_refactors || []),
+                ...(roadmap.long_term || [])
+            ]);
+
+            // Display Timeline
+            displayTimeline(roadmap);
+        }
+
+        // Display Roadmap Section
+        function displayRoadmapSection(containerId, issues, type) {
+            const container = document.getElementById(containerId);
+            
+            if (!issues || issues.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">
+                            ${type === 'quick-wins' ? '⚡' : type === 'major' ? '🔨' : '🎯'}
+                        </div>
+                        <h3>No ${type === 'quick-wins' ? 'Quick Wins' : type === 'major' ? 'Major Refactors' : 'Long-term Projects'}</h3>
+                        <p>Run an analysis to see opportunities</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = '';
+
+            issues.forEach((issue, index) => {
+                const item = document.createElement('div');
+                item.className = `roadmap-item ${issue.status || 'pending'}`;
+                item.innerHTML = `
+                    <div class="roadmap-item-info">
+                        <div class="roadmap-item-title">${issue.title}</div>
+                        <div class="roadmap-item-meta">
+                            <span class="issue-badge ${issue.priority}">${issue.priority.toUpperCase()}</span>
+                            <span>${issue.category}</span>
+                            <span>⏱ ${issue.estimated_hours || 1}h</span>
+                            ${issue.status ? `<span class="status-badge ${issue.status}">${issue.status}</span>` : ''}
+                        </div>
+                    </div>
+                    <div class="roadmap-item-actions">
+                        <button class="btn btn-secondary btn-small" onclick="copyIssuePrompt('${type}', ${index})" title="Copy prompt">
+                            📋
+                        </button>
+                        <button class="btn btn-success btn-small" onclick="markRoadmapItemApplied('${type}', ${index})" title="Mark as applied">
+                            ✓
+                        </button>
+                        <button class="btn btn-warning btn-small" onclick="skipRoadmapItem('${type}', ${index})" title="Skip">
+                            ⊘
+                        </button>
+                        <button class="btn btn-primary btn-small" onclick="viewRoadmapItemDetails('${type}', ${index})" title="Details">
+                            👁
+                        </button>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        // Calculate Total Hours
+        function calculateTotalHours(issues) {
+            return issues.reduce((total, issue) => total + (issue.estimated_hours || 1), 0);
+        }
+
+        // Display Effort vs Impact Matrix
+        function displayEffortImpactMatrix(issues) {
+            const container = document.getElementById('matrixPoints');
+            container.innerHTML = '';
+
+            if (!issues || issues.length === 0) return;
+
+            issues.forEach((issue, index) => {
+                const effort = issue.estimated_hours || 1;
+                const impact = getPriorityScore(issue.priority);
+
+                // Calculate position (0-100%)
+                const x = Math.min((effort / 10) * 100, 95); // Max 10 hours
+                const y = 100 - Math.min((impact / 100) * 100, 95); // Invert Y axis
+
+                const point = document.createElement('div');
+                point.className = `matrix-point ${issue.priority}-priority`;
+                point.style.left = `${x}%`;
+                point.style.top = `${y}%`;
+                point.title = `${issue.title}\nEffort: ${effort}h, Impact: ${impact}`;
+                point.onclick = () => viewMatrixIssueDetails(issue);
+                
+                container.appendChild(point);
+            });
+        }
+
+        // Get Priority Score
+        function getPriorityScore(priority) {
+            const scores = {
+                'critical': 100,
+                'high': 75,
+                'medium': 50,
+                'low': 25
+            };
+            return scores[priority] || 50;
+        }
+
+        // Display Timeline
+        function displayTimeline(roadmap) {
+            const container = document.getElementById('timelineGrid');
+            const allIssues = [
+                ...(roadmap.quick_wins || []),
+                ...(roadmap.major_refactors || []),
+                ...(roadmap.long_term || [])
+            ];
+
+            if (allIssues.length === 0) {
+                container.innerHTML = '<div class="empty-state-icon" style="margin: auto; font-size: 2rem;">📅</div>';
+                return;
+            }
+
+            container.innerHTML = '<div class="timeline-axis"></div>';
+
+            const totalHours = calculateTotalHours(allIssues);
+            document.getElementById('timelineEstimate').textContent = `${totalHours.toFixed(1)} hours`;
+
+            let accumulatedHours = 0;
+
+            // Group by type
+            const groups = [
+                { type: 'quick-wins', issues: roadmap.quick_wins || [], color: 'quick-wins' },
+                { type: 'major', issues: roadmap.major_refactors || [], color: 'major' },
+                { type: 'long-term', issues: roadmap.long_term || [], color: 'long-term' }
+            ];
+
+            groups.forEach((group, groupIndex) => {
+                group.issues.forEach((issue, index) => {
+                    const hours = issue.estimated_hours || 1;
+                    const startPercent = (accumulatedHours / totalHours) * 100;
+                    const widthPercent = (hours / totalHours) * 100;
+
+                    const bar = document.createElement('div');
+                    bar.className = `timeline-bar ${group.color}`;
+                    bar.style.left = `${startPercent}%`;
+                    bar.style.width = `${widthPercent}%`;
+                    bar.style.top = `${groupIndex * 60 + 20}px`;
+                    bar.textContent = issue.title.length > 20 ? issue.title.substring(0, 20) + '...' : issue.title;
+                    bar.title = `${issue.title}\n${hours}h - ${issue.category}`;
+                    bar.onclick = () => viewMatrixIssueDetails(issue);
+
+                    container.appendChild(bar);
+                    accumulatedHours += hours;
+                });
+            });
+        }
+
+        // Issue Actions
+        function markAsApplied(index) {
+            if (!allIssues[index]) return;
+            allIssues[index].status = 'applied';
+            displayDetailedResults(allIssues.filter(filterIssuesCondition));
+            showNotification('Issue marked as applied ✓');
+            
+            // Update roadmap if loaded
+            if (roadmapData) {
+                updateRoadmapStatus();
+            }
+        }
+
+        function skipIssue(index) {
+            if (!allIssues[index]) return;
+            allIssues[index].status = 'skipped';
+            displayDetailedResults(allIssues.filter(filterIssuesCondition));
+            showNotification('Issue skipped');
+            
+            // Update roadmap if loaded
+            if (roadmapData) {
+                updateRoadmapStatus();
+            }
+        }
+
+        function filterIssuesCondition(issue) {
+            const searchTerm = document.getElementById('issueSearch')?.value.toLowerCase() || '';
+            const categoryFilter = document.getElementById('categoryFilter')?.value || '';
+            const priorityFilter = document.getElementById('priorityFilter')?.value || '';
+            const fileFilter = document.getElementById('fileFilter')?.value || '';
+
+            const matchesSearch = !searchTerm || 
+                issue.title.toLowerCase().includes(searchTerm) ||
+                issue.description.toLowerCase().includes(searchTerm) ||
+                issue.file.toLowerCase().includes(searchTerm);
+            
+            const matchesCategory = !categoryFilter || issue.category === categoryFilter;
+            const matchesPriority = !priorityFilter || issue.priority === priorityFilter;
+            const matchesFile = !fileFilter || issue.file === fileFilter;
+
+            return matchesSearch && matchesCategory && matchesPriority && matchesFile;
+        }
+
+        function viewIssueDetails(index) {
+            if (!allIssues[index]) return;
+            currentModalIssue = allIssues[index];
+            showIssueModal(allIssues[index]);
+        }
+
+        function copyIssuePrompt(type, index) {
+            const issue = getRoadmapIssue(type, index);
+            if (!issue) return;
+            
+            const prompt = issue.prompt || 'No prompt available';
+            navigator.clipboard.writeText(prompt).then(() => {
+                showNotification('Prompt copied to clipboard! 📋');
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+                alert('Failed to copy to clipboard');
+            });
+        }
+
+        function markRoadmapItemApplied(type, index) {
+            const issue = getRoadmapIssue(type, index);
+            if (!issue) return;
+            
+            issue.status = 'applied';
+            displayRoadmap(roadmapData);
+            showNotification('Item marked as applied ✓');
+        }
+
+        function skipRoadmapItem(type, index) {
+            const issue = getRoadmapIssue(type, index);
+            if (!issue) return;
+            
+            issue.status = 'skipped';
+            displayRoadmap(roadmapData);
+            showNotification('Item skipped');
+        }
+
+        function viewRoadmapItemDetails(type, index) {
+            const issue = getRoadmapIssue(type, index);
+            if (!issue) return;
+            
+            currentModalIssue = issue;
+            showIssueModal(issue);
+        }
+
+        function viewMatrixIssueDetails(issue) {
+            currentModalIssue = issue;
+            showIssueModal(issue);
+        }
+
+        function getRoadmapIssue(type, index) {
+            if (!roadmapData) return null;
+            
+            if (type === 'quick-wins' && roadmapData.quick_wins) {
+                return roadmapData.quick_wins[index];
+            } else if (type === 'major' && roadmapData.major_refactors) {
+                return roadmapData.major_refactors[index];
+            } else if (type === 'long-term' && roadmapData.long_term) {
+                return roadmapData.long_term[index];
+            }
+            return null;
+        }
+
+        function updateRoadmapStatus() {
+            // Sync statuses between allIssues and roadmapData
+            if (!roadmapData) return;
+            
+            const updateGroup = (group) => {
+                group.forEach(roadmapIssue => {
+                    const matchingIssue = allIssues.find(i => 
+                        i.title === roadmapIssue.title && i.file === roadmapIssue.file
+                    );
+                    if (matchingIssue) {
+                        roadmapIssue.status = matchingIssue.status;
+                    }
+                });
+            };
+
+            if (roadmapData.quick_wins) updateGroup(roadmapData.quick_wins);
+            if (roadmapData.major_refactors) updateGroup(roadmapData.major_refactors);
+            if (roadmapData.long_term) updateGroup(roadmapData.long_term);
+
+            displayRoadmap(roadmapData);
+        }
+
+        // Modal Functions
+        function showIssueModal(issue) {
+            const modal = document.getElementById('issueModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalBody = document.getElementById('modalBody');
+
+            modalTitle.textContent = issue.title;
+            modalBody.innerHTML = `
+                <div style="margin-bottom: 1.5rem;">
+                    <div style="display: flex; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;">
+                        <span class="issue-badge ${issue.priority}">${issue.priority.toUpperCase()}</span>
+                        <span class="issue-badge" style="background-color: rgba(74, 158, 255, 0.2); color: #4a9eff;">
+                            ${issue.category}
+                        </span>
+                        ${issue.status ? `<span class="status-badge ${issue.status}">${issue.status}</span>` : ''}
+                    </div>
+                    <div style="color: #b0b0b0; margin-bottom: 0.5rem;">
+                        <strong>File:</strong> ${issue.file}:${issue.line || 'N/A'}
+                    </div>
+                    ${issue.estimated_hours ? `
+                        <div style="color: #b0b0b0;">
+                            <strong>Estimated Time:</strong> ${issue.estimated_hours} hours
+                        </div>
+                    ` : ''}
+                </div>
+
+                <div style="margin-bottom: 1.5rem;">
+                    <h4 style="color: #ffffff; margin-bottom: 0.75rem;">Description</h4>
+                    <p style="color: #e0e0e0; line-height: 1.6;">${issue.description}</p>
+                </div>
+
+                ${issue.code_snippet ? `
+                    <div style="margin-bottom: 1.5rem;">
+                        <h4 style="color: #ffffff; margin-bottom: 0.75rem;">Code Preview</h4>
+                        <div class="code-preview">
+                            ${generateCodePreview(issue)}
+                        </div>
+                    </div>
+                ` : ''}
+
+                <div>
+                    <h4 style="color: #ffffff; margin-bottom: 0.75rem;">Copilot Prompt</h4>
+                    <pre style="background-color: #1a1a1a; padding: 1rem; border-radius: 6px; white-space: pre-wrap; color: #e0e0e0; max-height: 300px; overflow-y: auto;">${issue.prompt || 'No prompt available'}</pre>
+                </div>
+            `;
+
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('issueModal');
+            modal.classList.remove('active');
+            currentModalIssue = null;
+        }
+
+        function copyModalPrompt() {
+            if (!currentModalIssue) return;
+            
+            const prompt = currentModalIssue.prompt || 'No prompt available';
+            navigator.clipboard.writeText(prompt).then(() => {
+                showNotification('Prompt copied to clipboard! 📋');
+                closeModal();
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+                alert('Failed to copy to clipboard');
+            });
+        }
+
+        // Close modal on outside click
+        document.getElementById('issueModal')?.addEventListener('click', (e) => {
+            if (e.target.id === 'issueModal') {
+                closeModal();
+            }
+        });
+
+        // ==================== BULK ACTIONS ====================
+
+        function exportAllPrompts() {
+            if (!allIssues || allIssues.length === 0) {
+                alert('No issues to export');
+                return;
+            }
+
+            let content = '# Code Analysis Prompts\n\n';
+            content += `Generated: ${new Date().toLocaleString()}\n\n`;
+            content += `Total Issues: ${allIssues.length}\n\n`;
+            content += '---\n\n';
+
+            allIssues.forEach((issue, index) => {
+                content += `## ${index + 1}. ${issue.title}\n\n`;
+                content += `**Priority:** ${issue.priority}\n`;
+                content += `**Category:** ${issue.category}\n`;
+                content += `**File:** ${issue.file}:${issue.line || 'N/A'}\n\n`;
+                content += `**Description:**\n${issue.description}\n\n`;
+                content += `**Copilot Prompt:**\n\`\`\`\n${issue.prompt || 'No prompt available'}\n\`\`\`\n\n`;
+                content += '---\n\n';
+            });
+
+            downloadFile('analysis-prompts.txt', content);
+            showNotification('All prompts exported! 💾');
+        }
+
+        function copyTopPrompts() {
+            if (!allIssues || allIssues.length === 0) {
+                alert('No issues available');
+                return;
+            }
+
+            // Get top 5 by priority
+            const priorityOrder = { 'critical': 0, 'high': 1, 'medium': 2, 'low': 3 };
+            const sortedIssues = [...allIssues].sort((a, b) => 
+                (priorityOrder[a.priority] || 99) - (priorityOrder[b.priority] || 99)
+            );
+            const top5 = sortedIssues.slice(0, 5);
+
+            let content = 'TOP 5 PRIORITY ISSUES:\n\n';
+            top5.forEach((issue, index) => {
+                content += `${index + 1}. [${issue.priority.toUpperCase()}] ${issue.title}\n`;
+                content += `   File: ${issue.file}\n`;
+                content += `   Prompt: ${issue.prompt || 'No prompt'}\n\n`;
+            });
+
+            navigator.clipboard.writeText(content).then(() => {
+                showNotification('Top 5 prompts copied! 📋');
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+                alert('Failed to copy to clipboard');
+            });
+        }
+
+        function generateReport() {
+            if (!analysisResults) {
+                alert('No analysis results available');
+                return;
+            }
+
+            let markdown = '# Code Analysis Report\n\n';
+            markdown += `**Generated:** ${new Date().toLocaleString()}\n\n`;
+            markdown += `**File Analyzed:** ${analysisResults.file_path || 'Unknown'}\n\n`;
+            markdown += '---\n\n';
+
+            // Summary
+            markdown += '## Summary\n\n';
+            markdown += `- **Overall Score:** ${analysisResults.overall_score || 0}/100\n`;
+            markdown += `- **Total Issues:** ${analysisResults.total_issues || 0}\n`;
+            markdown += `- **Critical:** ${analysisResults.critical_issues || 0}\n`;
+            markdown += `- **High:** ${analysisResults.high_issues || 0}\n`;
+            markdown += `- **Medium:** ${analysisResults.medium_issues || 0}\n`;
+            markdown += `- **Low:** ${analysisResults.low_issues || 0}\n\n`;
+
+            // Issues by Category
+            if (allIssues && allIssues.length > 0) {
+                markdown += '## Issues by Priority\n\n';
+                
+                const groupedByPriority = {
+                    'critical': [],
+                    'high': [],
+                    'medium': [],
+                    'low': []
+                };
+
+                allIssues.forEach(issue => {
+                    if (groupedByPriority[issue.priority]) {
+                        groupedByPriority[issue.priority].push(issue);
+                    }
+                });
+
+                Object.entries(groupedByPriority).forEach(([priority, issues]) => {
+                    if (issues.length > 0) {
+                        markdown += `### ${priority.toUpperCase()} Priority (${issues.length})\n\n`;
+                        issues.forEach((issue, index) => {
+                            markdown += `${index + 1}. **${issue.title}**\n`;
+                            markdown += `   - Category: ${issue.category}\n`;
+                            markdown += `   - File: \`${issue.file}:${issue.line || 'N/A'}\`\n`;
+                            markdown += `   - Description: ${issue.description}\n\n`;
+                        });
+                    }
+                });
+            }
+
+            // Roadmap
+            if (roadmapData) {
+                markdown += '## Improvement Roadmap\n\n';
+                
+                if (roadmapData.quick_wins && roadmapData.quick_wins.length > 0) {
+                    markdown += `### ⚡ Quick Wins (${roadmapData.quick_wins.length} issues, ${calculateTotalHours(roadmapData.quick_wins).toFixed(1)}h)\n\n`;
+                    roadmapData.quick_wins.forEach((issue, index) => {
+                        markdown += `${index + 1}. ${issue.title} (${issue.estimated_hours || 1}h)\n`;
+                    });
+                    markdown += '\n';
+                }
+
+                if (roadmapData.major_refactors && roadmapData.major_refactors.length > 0) {
+                    markdown += `### 🔨 Major Refactors (${roadmapData.major_refactors.length} issues, ${calculateTotalHours(roadmapData.major_refactors).toFixed(1)}h)\n\n`;
+                    roadmapData.major_refactors.forEach((issue, index) => {
+                        markdown += `${index + 1}. ${issue.title} (${issue.estimated_hours || 4}h)\n`;
+                    });
+                    markdown += '\n';
+                }
+
+                if (roadmapData.long_term && roadmapData.long_term.length > 0) {
+                    markdown += `### 🎯 Long-term Projects (${roadmapData.long_term.length} issues, ${calculateTotalHours(roadmapData.long_term).toFixed(1)}h)\n\n`;
+                    roadmapData.long_term.forEach((issue, index) => {
+                        markdown += `${index + 1}. ${issue.title} (${issue.estimated_hours || 10}h)\n`;
+                    });
+                    markdown += '\n';
+                }
+            }
+
+            markdown += '---\n\n';
+            markdown += '*Generated by Advanced Code Analysis Tool*\n';
+
+            downloadFile('analysis-report.md', markdown);
+            showNotification('Report generated! 📄');
+        }
+
+        // ==================== SAVE/LOAD ANALYSIS ====================
+
+        function saveAnalysis() {
+            if (!analysisResults) {
+                alert('No analysis results to save');
+                return;
+            }
+
+            const saveData = {
+                timestamp: new Date().toISOString(),
+                file_path: analysisResults.file_path,
+                results: analysisResults,
+                issues: allIssues,
+                roadmap: roadmapData
+            };
+
+            const saveName = `analysis_${Date.now()}`;
+            localStorage.setItem(saveName, JSON.stringify(saveData));
+
+            // Save list of all saves
+            const savesList = JSON.parse(localStorage.getItem('analysis_saves_list') || '[]');
+            savesList.push({
+                name: saveName,
+                timestamp: saveData.timestamp,
+                file_path: saveData.file_path,
+                issues_count: allIssues.length
+            });
+            localStorage.setItem('analysis_saves_list', JSON.stringify(savesList));
+
+            showNotification('Analysis saved! 💼');
+        }
+
+        function showLoadAnalysis() {
+            const savesList = JSON.parse(localStorage.getItem('analysis_saves_list') || '[]');
+            
+            if (savesList.length === 0) {
+                alert('No saved analyses found');
+                return;
+            }
+
+            let html = '<h3 style="color: #ffffff; margin-bottom: 1rem;">Load Saved Analysis</h3>';
+            html += '<div class="save-load-section">';
+
+            savesList.reverse().forEach((save, index) => {
+                html += `
+                    <div class="save-card" onclick="loadAnalysisFromStorage('${save.name}')">
+                        <div class="save-card-header">
+                            <div>
+                                <div class="save-card-title">${save.file_path}</div>
+                                <div class="save-card-date">${new Date(save.timestamp).toLocaleString()}</div>
+                            </div>
+                        </div>
+                        <div class="save-card-stats">
+                            <span>📊 ${save.issues_count} issues</span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+
+            const modal = document.getElementById('issueModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalBody = document.getElementById('modalBody');
+            
+            modalTitle.textContent = 'Load Analysis';
+            modalBody.innerHTML = html;
+            modal.classList.add('active');
+        }
+
+        function loadAnalysisFromStorage(saveName) {
+            const saveData = JSON.parse(localStorage.getItem(saveName));
+            
+            if (!saveData) {
+                alert('Save data not found');
+                return;
+            }
+
+            // Restore data
+            analysisResults = saveData.results;
+            allIssues = saveData.issues || [];
+            roadmapData = saveData.roadmap;
+
+            // Update UI
+            displayResults(analysisResults);
+            
+            if (roadmapData) {
+                displayRoadmap(roadmapData);
+            }
+
+            closeModal();
+            showNotification('Analysis loaded! 📂');
+        }
+
+        // ==================== UTILITY FUNCTIONS ====================
+
+        function downloadFile(filename, content) {
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function showNotification(message) {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = 'alert alert-success';
+            notification.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 2000; animation: slideIn 0.3s ease;';
+            notification.innerHTML = `
+                <span class="alert-icon">✓</span>
+                <span>${message}</span>
+            `;
+
+            document.body.appendChild(notification);
+
+            // Remove after 3 seconds
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+
+        // Add animation styles
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(400px); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOut {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(400px); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
