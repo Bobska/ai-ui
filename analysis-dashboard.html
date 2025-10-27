@@ -463,6 +463,21 @@
             padding: 1.5rem;
         }
 
+        .modal-footer {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid #3a3a3a;
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            background-color: #1e1e1e;
+        }
+
+        .modal-footer .btn {
+            padding: 0.5rem 1.5rem;
+            font-size: 0.9rem;
+            min-width: 120px;
+        }
+
         .detail-section {
             margin-bottom: 1.5rem;
         }
@@ -795,7 +810,20 @@
 
         <!-- Pending Suggestions Table -->
         <div class="table-section">
-            <h3>⏳ Suggestions Pending Action</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3>⏳ Suggestions Pending Action</h3>
+                <div style="display: flex; gap: 1rem;">
+                    <select id="pendingPriorityFilter" onchange="updatePendingTable()" style="padding: 0.5rem; background-color: #2d2d2d; color: #e0e0e0; border: 1px solid #444; border-radius: 6px;">
+                        <option value="ALL">All Priorities</option>
+                        <option value="HIGH">High Priority</option>
+                        <option value="MEDIUM">Medium Priority</option>
+                        <option value="LOW">Low Priority</option>
+                    </select>
+                    <select id="pendingCategoryFilter" onchange="updatePendingTable()" style="padding: 0.5rem; background-color: #2d2d2d; color: #e0e0e0; border: 1px solid #444; border-radius: 6px;">
+                        <option value="ALL">All Categories</option>
+                    </select>
+                </div>
+            </div>
             <div class="table-wrapper">
                 <table>
                     <thead>
@@ -804,13 +832,14 @@
                             <th>Category</th>
                             <th>Priority</th>
                             <th>Location</th>
+                            <th>Est. Impact</th>
                             <th>Predicted Success</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody id="pendingTableBody">
                         <tr>
-                            <td colspan="6">
+                            <td colspan="7">
                                 <div class="empty-state">
                                     <div class="spinner"></div>
                                     <p>Loading pending suggestions...</p>
@@ -832,6 +861,9 @@
             </div>
             <div class="modal-body" id="modalBody">
                 <!-- Content will be dynamically populated -->
+            </div>
+            <div class="modal-footer" id="modalFooter">
+                <!-- Action buttons will be dynamically populated -->
             </div>
         </div>
     </div>
@@ -1126,17 +1158,34 @@
         // Update pending table
         function updatePendingTable() {
             const tbody = document.getElementById('pendingTableBody');
+            const priorityFilter = document.getElementById('pendingPriorityFilter').value;
+            const categoryFilter = document.getElementById('pendingCategoryFilter').value;
             
-            const pending = allData.history.filter(r => !r.applied);
+            let pending = allData.history.filter(r => !r.applied);
+            
+            // Apply filters
+            if (priorityFilter !== 'ALL') {
+                pending = pending.filter(r => r.issue.priority === priorityFilter);
+            }
+            if (categoryFilter !== 'ALL') {
+                pending = pending.filter(r => r.issue.category === categoryFilter);
+            }
+            
+            // Populate category filter options
+            const categories = [...new Set(allData.history.map(r => r.issue.category))];
+            const categorySelect = document.getElementById('pendingCategoryFilter');
+            const currentCategory = categorySelect.value;
+            categorySelect.innerHTML = '<option value="ALL">All Categories</option>' + 
+                categories.map(cat => `<option value="${cat}" ${cat === currentCategory ? 'selected' : ''}>${cat}</option>`).join('');
             
             if (pending.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="6">
+                        <td colspan="7">
                             <div class="empty-state">
                                 <div class="empty-state-icon">✨</div>
                                 <div class="empty-state-text">All caught up!</div>
-                                <div class="empty-state-subtext">No pending suggestions</div>
+                                <div class="empty-state-subtext">No pending suggestions matching filters</div>
                             </div>
                         </td>
                     </tr>
@@ -1147,13 +1196,15 @@
             tbody.innerHTML = pending.map(record => {
                 const predictedRate = getPredictedSuccessRate(record.issue.category);
                 const confidence = predictedRate > 60 ? 'high' : predictedRate > 30 ? 'medium' : 'low';
+                const impact = record.issue.estimated_improvement || record.issue.impact || 'Medium';
                 
                 return `
                     <tr>
                         <td>${record.issue.title}</td>
                         <td>${record.issue.category}</td>
                         <td><span class="badge ${record.issue.priority.toLowerCase()}">${record.issue.priority}</span></td>
-                        <td>${record.issue.location}</td>
+                        <td>${getFileName(record.issue.location)}</td>
+                        <td><small style="color: #a0a0a0;">${truncateText(impact, 30)}</small></td>
                         <td>
                             <span class="badge ${confidence}">${predictedRate.toFixed(0)}%</span>
                         </td>
@@ -1235,6 +1286,7 @@
         // Display detail modal
         function displayDetailModal(data) {
             const modalBody = document.getElementById('modalBody');
+            const modalFooter = document.getElementById('modalFooter');
             
             const appliedDate = data.applied_date ? 
                 new Date(data.applied_date).toLocaleString() : 'Not applied';
@@ -1338,6 +1390,24 @@
                 </div>
             `;
 
+            // Populate action buttons in footer
+            if (!data.applied) {
+                modalFooter.innerHTML = `
+                    <button class="btn btn-success" onclick="markAsApplied('${data.suggestion_id}')">
+                        ✓ Mark as Applied
+                    </button>
+                    <button class="btn btn-danger" onclick="markAsRejected('${data.suggestion_id}')">
+                        ✗ Reject
+                    </button>
+                `;
+            } else {
+                modalFooter.innerHTML = `
+                    <div style="color: #22c55e; font-weight: bold;">
+                        ✓ Already applied on ${appliedDate}
+                    </div>
+                `;
+            }
+
             document.getElementById('detailModal').classList.add('show');
         }
 
@@ -1365,6 +1435,7 @@
                 if (!response.ok) throw new Error('Failed to mark as applied');
                 
                 showToast('Suggestion marked as applied! Remember to measure outcome.', 'success');
+                closeDetailModal();
                 await loadAllData();
                 
             } catch (error) {
@@ -1395,6 +1466,7 @@
                 if (!response.ok) throw new Error('Failed to mark as rejected');
                 
                 showToast('Suggestion marked as rejected', 'success');
+                closeDetailModal();
                 await loadAllData();
                 
             } catch (error) {
@@ -1463,6 +1535,11 @@
         // Helper functions
         function getFileName(location) {
             return location.split(':')[0].split('/').pop();
+        }
+
+        function truncateText(text, maxLength) {
+            if (!text || text.length <= maxLength) return text;
+            return text.substring(0, maxLength - 3) + '...';
         }
 
         function formatMetric(metrics) {
