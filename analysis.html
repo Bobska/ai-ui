@@ -1024,7 +1024,10 @@
 
         // Export Prompts
         exportPromptsBtn.addEventListener('click', async () => {
-            if (!currentAnalysisId) return;
+            if (!currentAnalysisId) {
+                showStatus('error', 'No analysis available. Run an analysis first.');
+                return;
+            }
             
             const priority = document.getElementById('promptPriorityFilter').value;
             const format = document.getElementById('promptFormatFilter').value;
@@ -1032,9 +1035,18 @@
             try {
                 const response = await fetch(`${API_BASE}/prompts/${currentAnalysisId}?priority_filter=${priority}&output_format=${format}`);
                 
-                if (!response.ok) throw new Error('Failed to fetch prompts');
+                if (!response.ok) {
+                    const error = await response.json().catch(() => ({ detail: 'Unknown error' }));
+                    const errorMsg = error.detail || JSON.stringify(error);
+                    throw new Error(errorMsg);
+                }
                 
                 const data = await response.json();
+                
+                if (data.prompt_count === 0) {
+                    showStatus('warning', 'No prompts to export with current filters');
+                    return;
+                }
                 
                 // Create download
                 const content = data.prompts.join('\n\n---\n\n');
@@ -1055,7 +1067,10 @@
 
         // Load Prompts Button
         document.getElementById('loadPromptsBtn').addEventListener('click', async () => {
-            if (!currentAnalysisId) return;
+            if (!currentAnalysisId) {
+                showStatus('error', 'No analysis available. Run an analysis first.');
+                return;
+            }
             
             const priority = document.getElementById('promptPriorityFilter').value;
             const format = document.getElementById('promptFormatFilter').value;
@@ -1092,8 +1107,9 @@
                 });
                 
                 if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.detail || 'Analysis failed');
+                    const error = await response.json().catch(() => ({ detail: 'Unknown error' }));
+                    const errorMsg = error.detail || JSON.stringify(error);
+                    throw new Error(errorMsg);
                 }
                 
                 const data = await response.json();
@@ -1107,7 +1123,7 @@
                 
             } catch (error) {
                 console.error('Analysis error:', error);
-                showStatus('error', `Error: ${error.message}`);
+                showStatus('error', `Analysis failed: ${error.message}`);
                 showEmptyState();
             }
         }
@@ -1124,8 +1140,9 @@
                 });
                 
                 if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.detail || 'Comparison failed');
+                    const error = await response.json().catch(() => ({ detail: 'Unknown error' }));
+                    const errorMsg = error.detail || JSON.stringify(error);
+                    throw new Error(errorMsg);
                 }
                 
                 const data = await response.json();
@@ -1143,7 +1160,7 @@
                 
             } catch (error) {
                 console.error('Comparison error:', error);
-                showStatus('error', `Error: ${error.message}`);
+                showStatus('error', `Comparison failed: ${error.message}`);
                 showEmptyState();
             }
         }
@@ -1154,7 +1171,11 @@
             try {
                 const response = await fetch(`${API_BASE}/prompts/${analysisId}?priority_filter=${priority}&output_format=${format}`);
                 
-                if (!response.ok) throw new Error('Failed to load prompts');
+                if (!response.ok) {
+                    const error = await response.json().catch(() => ({ detail: 'Unknown error' }));
+                    const errorMsg = error.detail || JSON.stringify(error);
+                    throw new Error(errorMsg);
+                }
                 
                 const data = await response.json();
                 
@@ -1164,7 +1185,7 @@
                 
             } catch (error) {
                 console.error('Load prompts error:', error);
-                showStatus('error', `Error: ${error.message}`);
+                showStatus('error', `Failed to load prompts: ${error.message}`);
             }
         }
 
@@ -1400,7 +1421,13 @@
             resultsTabs.style.display = 'block';
             
             document.getElementById('totalIssues').textContent = data.common_issues + data.unique_to_a + data.unique_to_b;
-            document.getElementById('highPriority').textContent = [...data.issues_a, ...data.issues_b].filter(i => i.priority === 'HIGH').length;
+            // Count HIGH priority from unique issues only (common issues would be counted twice)
+            // Get unique issues by filtering out common ones
+            const commonTitles = new Set(data.common.map(i => i.title));
+            const uniqueIssuesA = data.issues_a.filter(i => !commonTitles.has(i.title));
+            const uniqueIssuesB = data.issues_b.filter(i => !commonTitles.has(i.title));
+            const highPriorityCount = [...data.common, ...uniqueIssuesA, ...uniqueIssuesB].filter(i => i.priority === 'HIGH').length;
+            document.getElementById('highPriority').textContent = highPriorityCount;
             document.getElementById('analysisTime').textContent = data.analysis_duration.toFixed(2) + 's';
         }
 
