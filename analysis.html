@@ -1421,7 +1421,13 @@
             resultsTabs.style.display = 'block';
             
             document.getElementById('totalIssues').textContent = data.common_issues + data.unique_to_a + data.unique_to_b;
-            document.getElementById('highPriority').textContent = [...data.issues_a, ...data.issues_b].filter(i => i.priority === 'HIGH').length;
+            // Count HIGH priority from unique issues only (common issues would be counted twice)
+            // Get unique issues by filtering out common ones
+            const commonTitles = new Set(data.common.map(i => i.title));
+            const uniqueIssuesA = data.issues_a.filter(i => !commonTitles.has(i.title));
+            const uniqueIssuesB = data.issues_b.filter(i => !commonTitles.has(i.title));
+            const highPriorityCount = [...data.common, ...uniqueIssuesA, ...uniqueIssuesB].filter(i => i.priority === 'HIGH').length;
+            document.getElementById('highPriority').textContent = highPriorityCount;
             document.getElementById('analysisTime').textContent = data.analysis_duration.toFixed(2) + 's';
         }
 
