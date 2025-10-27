@@ -1,0 +1,2573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Benchmark Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+        }
+
+        /* Navigation */
+        nav {
+            background: rgba(30, 30, 30, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        nav li {
+            display: inline;
+        }
+
+        nav a {
+            color: #e0e0e0;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        nav a:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #4ade80;
+        }
+
+        nav a.active {
+            background: #4ade80;
+            color: #0a0a0a;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Page Header */
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #4ade80 0%, #3b82f6 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-header p {
+            color: #a0a0a0;
+            font-size: 1.1rem;
+        }
+
+        /* Section Styles */
+        .section {
+            margin-bottom: 3rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #f0f0f0;
+        }
+
+        /* Hero Section - Score Overview */
+        .hero-section {
+            background: linear-gradient(135deg, #2d2d2d 0%, #1e1e1e 100%);
+            border-radius: 16px;
+            padding: 3rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            margin-bottom: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .hero-content {
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            gap: 3rem;
+            align-items: center;
+        }
+
+        .gauge-container {
+            position: relative;
+            width: 350px;
+            height: 350px;
+            margin: 0 auto;
+        }
+
+        .gauge-score {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .gauge-score-value {
+            font-size: 5rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .gauge-score-label {
+            font-size: 1rem;
+            color: #a0a0a0;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-top: 0.5rem;
+        }
+
+        .score-red { color: #ef4444; }
+        .score-yellow { color: #fbbf24; }
+        .score-green { color: #4ade80; }
+
+        .hero-info {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .rank-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            width: fit-content;
+        }
+
+        .last-benchmark {
+            color: #a0a0a0;
+            font-size: 0.95rem;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+            color: #0a0a0a;
+            box-shadow: 0 4px 12px rgba(74, 222, 128, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(74, 222, 128, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #e0e0e0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        /* Quick Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #2d2d2d 0%, #1e1e1e 100%);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+            border-color: rgba(74, 222, 128, 0.3);
+        }
+
+        .stat-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .stat-card-icon {
+            font-size: 2rem;
+        }
+
+        .stat-card-title {
+            font-size: 0.9rem;
+            color: #a0a0a0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        .stat-card-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+        }
+
+        .trend {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-weight: 600;
+        }
+
+        .trend-up { color: #4ade80; }
+        .trend-down { color: #ef4444; }
+        .trend-stable { color: #fbbf24; }
+
+        /* Chart Container */
+        .chart-container {
+            background: linear-gradient(135deg, #2d2d2d 0%, #1e1e1e 100%);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 400px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: #a0a0a0;
+        }
+
+        .loading-spinner {
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top: 3px solid #4ade80;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Error State */
+        .error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 8px;
+            padding: 1.5rem;
+            color: #ef4444;
+            margin: 2rem 0;
+        }
+
+        /* First Benchmark Welcome Message */
+        .first-benchmark-notice {
+            background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+            border: 1px solid #3d3d3d;
+            border-radius: 12px;
+            padding: 3rem 2rem;
+            margin: 2rem 0;
+            text-align: center;
+        }
+
+        .first-benchmark-content h2 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #4ade80 0%, #3b82f6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .first-benchmark-content p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin: 1rem 0;
+            color: #d0d0d0;
+        }
+
+        .first-benchmark-content .btn-primary {
+            font-size: 1.2rem;
+            padding: 0.8rem 2rem;
+            margin: 2rem 0 1rem 0;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .hero-content {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .hero-info {
+                align-items: center;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                padding: 1rem;
+            }
+
+            nav ul {
+                gap: 0.5rem;
+                flex-wrap: wrap;
+            }
+
+            nav a {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.9rem;
+            }
+
+            .page-header h1 {
+                font-size: 2rem;
+            }
+
+            .hero-section {
+                padding: 2rem 1rem;
+            }
+
+            .gauge-container {
+                width: 280px;
+                height: 280px;
+            }
+
+            .gauge-score-value {
+                font-size: 3.5rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        /* Leaderboard Styles */
+        .leaderboard {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .leaderboard-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .leaderboard-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(74, 222, 128, 0.3);
+            transform: translateX(4px);
+        }
+
+        .leaderboard-item.your-ai {
+            background: linear-gradient(90deg, rgba(74, 222, 128, 0.15) 0%, rgba(74, 222, 128, 0.05) 100%);
+            border-color: rgba(74, 222, 128, 0.3);
+        }
+
+        .leaderboard-rank {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #a0a0a0;
+            min-width: 40px;
+        }
+
+        .leaderboard-name {
+            flex: 1;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .leaderboard-bar-container {
+            flex: 2;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .leaderboard-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%);
+            border-radius: 6px;
+            transition: width 1s ease;
+        }
+
+        .leaderboard-bar.your-ai {
+            background: linear-gradient(90deg, #4ade80 0%, #22c55e 100%);
+        }
+
+        .leaderboard-score {
+            font-size: 1.2rem;
+            font-weight: 700;
+            min-width: 60px;
+            text-align: right;
+        }
+
+        .leaderboard-gap {
+            font-size: 0.9rem;
+            font-weight: 600;
+            min-width: 70px;
+            text-align: right;
+        }
+
+        .leaderboard-gap.positive {
+            color: #4ade80;
+        }
+
+        .leaderboard-gap.negative {
+            color: #ef4444;
+        }
+
+        /* Date Range Selector */
+        .date-range-selector {
+            display: flex;
+            gap: 0.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 0.25rem;
+            border-radius: 8px;
+        }
+
+        .range-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            background: transparent;
+            color: #a0a0a0;
+            cursor: pointer;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .range-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #e0e0e0;
+        }
+
+        .range-btn.active {
+            background: #4ade80;
+            color: #0a0a0a;
+        }
+
+        /* Strengths & Weaknesses Grid */
+        .strengths-weaknesses-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+        }
+
+        .strength-card, .weakness-card {
+            background: linear-gradient(135deg, #2d2d2d 0%, #1e1e1e 100%);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .card-subtitle {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #f0f0f0;
+        }
+
+        .strength-list, .weakness-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .strength-item, .weakness-item {
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 3px solid;
+        }
+
+        .strength-item {
+            background: rgba(74, 222, 128, 0.1);
+            border-color: #4ade80;
+        }
+
+        .weakness-item {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: #ef4444;
+        }
+
+        .strength-item-title, .weakness-item-title {
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .strength-item-description, .weakness-item-description {
+            font-size: 0.9rem;
+            color: #a0a0a0;
+        }
+
+        /* Responsive additions */
+        @media (max-width: 1024px) {
+            .strengths-weaknesses-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .date-range-selector {
+                flex-direction: column;
+            }
+
+            .range-btn {
+                width: 100%;
+            }
+        }
+
+        /* Metrics Table */
+        .filter-select {
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            color: #e0e0e0;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        .filter-select:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .metrics-table {
+            overflow-x: auto;
+        }
+
+        .metrics-category {
+            margin-bottom: 2rem;
+        }
+
+        .metrics-category-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1rem;
+            background: rgba(74, 222, 128, 0.1);
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .metrics-category-header:hover {
+            background: rgba(74, 222, 128, 0.15);
+        }
+
+        .metrics-category-content {
+            display: none;
+        }
+
+        .metrics-category-content.expanded {
+            display: block;
+        }
+
+        .metrics-table-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+            gap: 0.5rem;
+            padding: 0.5rem;
+        }
+
+        .metrics-table-header {
+            font-weight: 600;
+            color: #a0a0a0;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            padding: 0.75rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .metrics-table-row {
+            display: contents;
+        }
+
+        .metrics-table-cell {
+            padding: 0.75rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+        }
+
+        .status-icon {
+            font-size: 1.2rem;
+            margin-right: 0.5rem;
+        }
+
+        /* Suggestions Grid */
+        .suggestions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .suggestion-card {
+            background: linear-gradient(135deg, #2d2d2d 0%, #1e1e1e 100%);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .suggestion-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        .suggestion-priority {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+        }
+
+        .priority-high {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: #fff;
+        }
+
+        .priority-medium {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            color: #0a0a0a;
+        }
+
+        .priority-low {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: #fff;
+        }
+
+        .suggestion-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: #f0f0f0;
+        }
+
+        .suggestion-impact {
+            display: flex;
+            gap: 1rem;
+            margin: 0.75rem 0;
+            font-size: 0.9rem;
+        }
+
+        .suggestion-impact-item {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            color: #a0a0a0;
+        }
+
+        .suggestion-impact-value {
+            color: #4ade80;
+            font-weight: 600;
+        }
+
+        .suggestion-description {
+            color: #a0a0a0;
+            line-height: 1.5;
+            margin-bottom: 1rem;
+        }
+
+        .suggestion-link {
+            color: #4ade80;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .suggestion-link:hover {
+            text-decoration: underline;
+        }
+
+        /* Milestones Timeline */
+        .milestones-timeline {
+            position: relative;
+            padding-left: 2rem;
+        }
+
+        .milestones-timeline::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(180deg, #4ade80 0%, #3b82f6 100%);
+        }
+
+        .milestone-item {
+            position: relative;
+            margin-bottom: 2rem;
+            padding-left: 2rem;
+        }
+
+        .milestone-item::before {
+            content: '🏆';
+            position: absolute;
+            left: -2.75rem;
+            top: 0;
+            width: 2.5rem;
+            height: 2.5rem;
+            background: #1e1e1e;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            border: 2px solid #4ade80;
+        }
+
+        .milestone-date {
+            color: #a0a0a0;
+            font-size: 0.85rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .milestone-title {
+            font-weight: 600;
+            font-size: 1.05rem;
+            color: #f0f0f0;
+            margin-bottom: 0.25rem;
+        }
+
+        .milestone-score {
+            color: #4ade80;
+            font-weight: 600;
+        }
+
+        .milestone-description {
+            color: #a0a0a0;
+            font-size: 0.9rem;
+        }
+
+        /* Action Bar */
+        .action-bar {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            padding: 2rem 0;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 10000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(4px);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            position: relative;
+            background: linear-gradient(135deg, #2d2d2d 0%, #1e1e1e 100%);
+            margin: 5% auto;
+            padding: 0;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            animation: slideDown 0.3s ease;
+        }
+
+        .modal-large {
+            max-width: 900px;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: #a0a0a0;
+            font-size: 2rem;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .modal-close:hover {
+            color: #ef4444;
+            transform: rotate(90deg);
+        }
+
+        .modal-body {
+            padding: 2rem;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            padding: 1.5rem 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: #f0f0f0;
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .checkbox-label:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .checkbox-label input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .estimate-box {
+            background: rgba(74, 222, 128, 0.1);
+            border: 1px solid rgba(74, 222, 128, 0.3);
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            margin: 1.5rem 0;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4ade80 0%, #22c55e 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 20px rgba(74, 222, 128, 0.5);
+        }
+
+        .progress-text {
+            text-align: center;
+            font-weight: 600;
+            margin-top: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .progress-status {
+            text-align: center;
+            color: #a0a0a0;
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        /* Comparison Modal */
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .comparison-chart {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .comparison-section {
+            margin-bottom: 2rem;
+        }
+
+        .comparison-subtitle {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #f0f0f0;
+        }
+
+        .comparison-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .comparison-item {
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 6px;
+            font-size: 0.95rem;
+        }
+
+        /* Responsive Modal */
+        @media (max-width: 768px) {
+            .modal-content {
+                width: 95%;
+                margin: 10% auto;
+            }
+
+            .comparison-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .action-bar {
+                flex-direction: column;
+            }
+
+            .action-bar .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <ul>
+            <li><a href="index.html">🏠 Home</a></li>
+            <li><a href="analysis.html">📊 Analysis</a></li>
+            <li><a href="memories.html">💭 Memories</a></li>
+            <li><a href="suggestions.html">💡 Suggestions</a></li>
+            <li><a href="benchmark-dashboard.html" class="active">🏆 Benchmark</a></li>
+            <li><a href="settings.html">⚙️ Settings</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1>🏆 AI Benchmark Dashboard</h1>
+            <p>Comprehensive performance analysis and industry comparison</p>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loading" class="loading">
+            <div class="loading-spinner"></div>
+            <p>Loading benchmark data...</p>
+        </div>
+
+        <!-- Error State -->
+        <div id="error" class="error" style="display: none;">
+            <strong>⚠️ Error loading benchmark data</strong>
+            <p id="error-message"></p>
+        </div>
+
+        <!-- First Benchmark Notice -->
+        <div id="firstBenchmarkNotice" class="first-benchmark-notice" style="display: none;">
+            <div class="first-benchmark-content">
+                <h2>🚀 Welcome to the Benchmark Dashboard!</h2>
+                <p>No benchmark data found yet. Run your first benchmark to see your AI's performance metrics, industry comparisons, and trends.</p>
+                <button class="btn btn-primary" onclick="runBenchmark()" style="margin-top: 1rem;">
+                    🔄 Run Your First Benchmark
+                </button>
+                <p style="margin-top: 1rem; color: #a0a0a0; font-size: 0.9rem;">
+                    This will test your AI across 5 categories: Memory, Response, Learning, Knowledge, and Speed.
+                    Estimated time: 45-60 seconds
+                </p>
+            </div>
+        </div>
+
+        <!-- SECTION A: Score Overview (Hero Section) -->
+        <div id="hero-section" class="hero-section" style="display: none;">
+            <div class="hero-content">
+                <div class="gauge-container">
+                    <canvas id="scoreGauge"></canvas>
+                    <div class="gauge-score">
+                        <div class="gauge-score-value" id="scoreValue">--</div>
+                        <div class="gauge-score-label">Overall Score</div>
+                    </div>
+                </div>
+                
+                <div class="hero-info">
+                    <div>
+                        <div class="rank-badge">
+                            <span>🏅</span>
+                            <span id="rankBadge">Rank #-- of 7</span>
+                        </div>
+                    </div>
+                    
+                    <div class="last-benchmark">
+                        <strong>Last Benchmarked:</strong> <span id="lastBenchmark">--</span>
+                    </div>
+                    
+                    <div class="hero-actions">
+                        <button class="btn btn-primary" onclick="runBenchmark()">
+                            🔄 Run Benchmark
+                        </button>
+                        <button class="btn btn-secondary" onclick="viewHistory()">
+                            📊 View History
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION B: Quick Stats Cards -->
+        <div id="stats-section" class="section" style="display: none;">
+            <h2 class="section-title">Category Performance</h2>
+            <div class="stats-grid">
+                <div class="stat-card" onclick="viewCategory('memory')">
+                    <div class="stat-card-header">
+                        <span class="stat-card-icon">🧠</span>
+                    </div>
+                    <div class="stat-card-title">Memory Performance</div>
+                    <div class="stat-card-value" id="memoryScore">--</div>
+                    <div class="stat-card-footer">
+                        <span class="trend" id="memoryTrend">
+                            <span>→</span>
+                            <span>0.0</span>
+                        </span>
+                        <span style="color: #666;">vs previous</span>
+                    </div>
+                </div>
+
+                <div class="stat-card" onclick="viewCategory('response')">
+                    <div class="stat-card-header">
+                        <span class="stat-card-icon">💬</span>
+                    </div>
+                    <div class="stat-card-title">Response Quality</div>
+                    <div class="stat-card-value" id="responseScore">--</div>
+                    <div class="stat-card-footer">
+                        <span class="trend" id="responseTrend">
+                            <span>→</span>
+                            <span>0.0</span>
+                        </span>
+                        <span style="color: #666;">vs previous</span>
+                    </div>
+                </div>
+
+                <div class="stat-card" onclick="viewCategory('learning')">
+                    <div class="stat-card-header">
+                        <span class="stat-card-icon">📚</span>
+                    </div>
+                    <div class="stat-card-title">Learning Rate</div>
+                    <div class="stat-card-value" id="learningScore">--</div>
+                    <div class="stat-card-footer">
+                        <span class="trend" id="learningTrend">
+                            <span>→</span>
+                            <span>0.0</span>
+                        </span>
+                        <span style="color: #666;">vs previous</span>
+                    </div>
+                </div>
+
+                <div class="stat-card" onclick="viewCategory('speed')">
+                    <div class="stat-card-header">
+                        <span class="stat-card-icon">⚡</span>
+                    </div>
+                    <div class="stat-card-title">Speed</div>
+                    <div class="stat-card-value" id="speedScore">--</div>
+                    <div class="stat-card-footer">
+                        <span class="trend" id="speedTrend">
+                            <span>→</span>
+                            <span>0.0</span>
+                        </span>
+                        <span style="color: #666;">vs previous</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION C: Category Breakdown (Radar Chart) -->
+        <div id="radar-section" class="section" style="display: none;">
+            <h2 class="section-title">Category Breakdown</h2>
+            <div class="chart-container">
+                <div class="chart-wrapper">
+                    <canvas id="radarChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION D: Industry Comparison (Leaderboard) -->
+        <div id="comparison-section" class="section" style="display: none;">
+            <h2 class="section-title">Industry Comparison</h2>
+            <div class="chart-container">
+                <div id="leaderboard" class="leaderboard">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION E: Historical Trends -->
+        <div id="trends-section" class="section" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h2 class="section-title" style="margin-bottom: 0;">Historical Trends</h2>
+                <div class="date-range-selector">
+                    <button class="range-btn active" data-range="all" onclick="setDateRange('all')">All Time</button>
+                    <button class="range-btn" data-range="30" onclick="setDateRange('30')">30 Days</button>
+                    <button class="range-btn" data-range="7" onclick="setDateRange('7')">7 Days</button>
+                </div>
+            </div>
+            <div class="chart-container">
+                <div class="chart-wrapper" style="height: 350px;">
+                    <canvas id="trendChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION F: Strengths & Weaknesses -->
+        <div id="strengths-section" class="section" style="display: none;">
+            <h2 class="section-title">Performance Analysis</h2>
+            <div class="strengths-weaknesses-grid">
+                <div class="strength-card">
+                    <h3 class="card-subtitle">✅ Strengths</h3>
+                    <div id="strengthsList" class="strength-list">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </div>
+                <div class="weakness-card">
+                    <h3 class="card-subtitle">⚠️ Areas for Improvement</h3>
+                    <div id="weaknessesList" class="weakness-list">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION G: Detailed Metrics Table -->
+        <div id="metrics-section" class="section" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h2 class="section-title" style="margin-bottom: 0;">Detailed Metrics</h2>
+                <div style="display: flex; gap: 1rem;">
+                    <select id="statusFilter" class="filter-select" onchange="filterMetrics()">
+                        <option value="all">All Tests</option>
+                        <option value="passed">✅ Passed</option>
+                        <option value="warning">⚠️ Warning</option>
+                        <option value="failed">❌ Failed</option>
+                    </select>
+                    <button class="btn btn-secondary" onclick="exportMetricsCSV()">
+                        📥 Export CSV
+                    </button>
+                </div>
+            </div>
+            <div class="chart-container">
+                <div id="metricsTable" class="metrics-table">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION H: Improvement Suggestions -->
+        <div id="suggestions-section" class="section" style="display: none;">
+            <h2 class="section-title">Improvement Suggestions</h2>
+            <div class="suggestions-grid" id="suggestionsList">
+                <!-- Populated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- SECTION I: Milestones & Achievements -->
+        <div id="milestones-section" class="section" style="display: none;">
+            <h2 class="section-title">🏅 Milestones & Achievements</h2>
+            <div class="chart-container">
+                <div id="milestonesTimeline" class="milestones-timeline">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Export & Refresh Controls -->
+        <div class="section">
+            <div class="action-bar">
+                <button class="btn btn-secondary" onclick="exportReport()">
+                    📄 Export Report (PDF)
+                </button>
+                <button class="btn btn-secondary" onclick="exportData()">
+                    💾 Export Data (JSON)
+                </button>
+                <button class="btn btn-primary" onclick="location.reload()">
+                    🔄 Refresh Dashboard
+                </button>
+            </div>
+            <div style="text-align: center; margin-top: 1rem; color: #666;">
+                Last updated: <span id="lastUpdated">--</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Run Benchmark -->
+    <div id="runBenchmarkModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🔄 Run Benchmark</h2>
+                <button class="modal-close" onclick="closeRunBenchmarkModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Select Categories:</label>
+                    <div class="checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="categoryAll" checked onchange="toggleAllCategories()">
+                            <span>All Categories</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="category-checkbox" value="memory" checked>
+                            <span>🧠 Memory</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="category-checkbox" value="response" checked>
+                            <span>💬 Response Quality</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="category-checkbox" value="learning" checked>
+                            <span>📚 Learning</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="category-checkbox" value="knowledge" checked>
+                            <span>🎓 Knowledge</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="category-checkbox" value="speed" checked>
+                            <span>⚡ Speed</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="quickMode">
+                        <span>Quick Mode (Faster, less comprehensive)</span>
+                    </label>
+                </div>
+
+                <div class="form-group">
+                    <div class="estimate-box">
+                        <strong>Estimated Time:</strong> <span id="estimatedTime">45-60 seconds</span>
+                    </div>
+                </div>
+
+                <div id="benchmarkProgress" style="display: none;">
+                    <div class="progress-container">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <div class="progress-text" id="progressText">0%</div>
+                    </div>
+                    <div class="progress-status" id="progressStatus">Initializing...</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeRunBenchmarkModal()">Cancel</button>
+                <button class="btn btn-primary" id="startBenchmarkBtn" onclick="startBenchmark()">
+                    ▶️ Start Benchmark
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Model Comparison -->
+    <div id="comparisonModal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2>📊 Detailed Comparison: <span id="comparisonModelName">GPT-4</span></h2>
+                <button class="modal-close" onclick="closeComparisonModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="comparison-grid">
+                    <div class="comparison-chart">
+                        <canvas id="comparisonRadar"></canvas>
+                    </div>
+                    <div class="comparison-details">
+                        <div class="comparison-section">
+                            <h3 class="comparison-subtitle">✅ Where You're Better</h3>
+                            <div id="comparisonBetter" class="comparison-list">
+                                <!-- Populated by JavaScript -->
+                            </div>
+                        </div>
+                        <div class="comparison-section">
+                            <h3 class="comparison-subtitle">⚠️ Where They're Better</h3>
+                            <div id="comparisonWorse" class="comparison-list">
+                                <!-- Populated by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API Configuration
+        const API_BASE = 'http://localhost:8000/api/benchmark';
+        
+        // Global chart instances
+        let scoreGaugeChart = null;
+        let radarChart = null;
+        let trendChart = null;
+        let comparisonRadarChart = null;
+        let currentData = null;
+        let dateRange = 'all';
+        let currentBenchmarkId = null;
+
+        // Initialize dashboard
+        async function init() {
+            try {
+                await loadBenchmarkData();
+            } catch (error) {
+                console.error('Initialization error:', error);
+                showError('Failed to initialize dashboard: ' + error.message);
+            }
+        }
+
+        // Show message when no benchmarks exist yet
+        function showNoBenchmarksMessage() {
+            // Hide loading and all sections
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('hero-section').style.display = 'none';
+            document.getElementById('stats-section').style.display = 'none';
+            document.getElementById('radar-section').style.display = 'none';
+            document.getElementById('comparison-section').style.display = 'none';
+            document.getElementById('trends-section').style.display = 'none';
+            document.getElementById('strengths-section').style.display = 'none';
+            document.getElementById('metrics-section').style.display = 'none';
+            document.getElementById('suggestions-section').style.display = 'none';
+            document.getElementById('milestones-section').style.display = 'none';
+            
+            // Show welcome message
+            document.getElementById('firstBenchmarkNotice').style.display = 'block';
+        }
+
+        // Load benchmark data from API
+        async function loadBenchmarkData() {
+            try {
+                // Fetch latest benchmark
+                const response = await fetch(`${API_BASE}/latest`);
+                
+                if (response.status === 404) {
+                    // No benchmarks exist yet - show welcome message
+                    showNoBenchmarksMessage();
+                    return;
+                } else if (!response.ok) {
+                    throw new Error(`API returned ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                currentData = data;
+                
+            } catch (error) {
+                // Network error or API not running
+                console.error('API connection failed:', error.message);
+                showError('Cannot connect to API server. Please ensure the API server is running:\n\nuvicorn api_server:app --reload --host 0.0.0.0 --port 8000');
+                return;
+            }
+            
+            try {
+                // Hide loading and welcome message, show content
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('firstBenchmarkNotice').style.display = 'none';
+                
+                document.getElementById('hero-section').style.display = 'block';
+                document.getElementById('stats-section').style.display = 'block';
+                document.getElementById('radar-section').style.display = 'block';
+                document.getElementById('comparison-section').style.display = 'block';
+                document.getElementById('trends-section').style.display = 'block';
+                document.getElementById('strengths-section').style.display = 'block';
+                document.getElementById('metrics-section').style.display = 'block';
+                document.getElementById('suggestions-section').style.display = 'block';
+                document.getElementById('milestones-section').style.display = 'block';
+                
+                // Update timestamp
+                document.getElementById('lastUpdated').textContent = new Date().toLocaleString();
+                
+                // Update all sections
+                updateScoreGauge(currentData.overall_score);
+                updateRankBadge(currentData.industry_rank);
+                updateLastBenchmark(currentData.timestamp);
+                updateCategoryCards(currentData.category_scores, currentData.vs_previous);
+                updateRadarChart(currentData.category_scores);
+                
+                // Load additional data
+                await loadIndustryComparison();
+                await loadTrends();
+                await loadMetrics();
+                await loadSuggestions();
+                await loadMilestones();
+                
+            } catch (error) {
+                console.error('Error displaying benchmark data:', error);
+                showError('Failed to display benchmark data. Please refresh the page.');
+            }
+        }
+
+        // Load industry comparison data
+        async function loadIndustryComparison() {
+            try {
+                const response = await fetch(`${API_BASE}/compare/industry`);
+                if (!response.ok) {
+                    // Endpoint not implemented yet - use placeholder
+                    console.warn('Industry comparison not available yet');
+                    updateLeaderboard(null);
+                    updateStrengthsWeaknesses([], []);
+                    return;
+                }
+                
+                const data = await response.json();
+                updateLeaderboard(data);
+                updateStrengthsWeaknesses(data.strengths, data.weaknesses);
+                
+            } catch (error) {
+                console.warn('Error loading industry comparison:', error);
+                // Show placeholder data
+                updateLeaderboard(null);
+                updateStrengthsWeaknesses([], []);
+            }
+        }
+
+        // Load trends data
+        async function loadTrends() {
+            try {
+                const response = await fetch(`${API_BASE}/history?limit=50`);
+                if (!response.ok) {
+                    throw new Error(`API returned ${response.status}`);
+                }
+                
+                const data = await response.json();
+                // Only update chart if we have data
+                if (data.results && data.results.length > 0) {
+                    updateTrendChart(data.results);
+                } else {
+                    console.log('No historical trend data available yet');
+                    // Hide trends section if no data
+                    document.getElementById('trends-section').style.display = 'none';
+                }
+                
+            } catch (error) {
+                console.warn('Error loading trends:', error);
+                // Hide trends section on error
+                document.getElementById('trends-section').style.display = 'none';
+            }
+        }
+
+        // Update leaderboard with industry comparison
+        function updateLeaderboard(data) {
+            const leaderboard = document.getElementById('leaderboard');
+            
+            // Industry baselines
+            const industryModels = [
+                { name: 'GPT-4', score: 92 },
+                { name: 'Claude-3-Opus', score: 91 },
+                { name: 'Claude-3-Sonnet', score: 86 },
+                { name: 'Gemini-Pro', score: 84 },
+                { name: 'GPT-3.5-turbo', score: 82 },
+                { name: 'Llama-3.1-70b', score: 78 }
+            ];
+            
+            // Add your AI
+            const yourScore = currentData ? currentData.overall_score : 0;
+            industryModels.push({ name: 'Your AI', score: yourScore, isYou: true });
+            
+            // Sort by score descending
+            industryModels.sort((a, b) => b.score - a.score);
+            
+            // Generate leaderboard HTML
+            leaderboard.innerHTML = industryModels.map((model, index) => {
+                const gap = model.score - yourScore;
+                const gapClass = gap > 0 ? 'positive' : gap < 0 ? 'negative' : '';
+                const gapText = gap > 0 ? `+${gap.toFixed(0)}` : gap < 0 ? `${gap.toFixed(0)}` : '—';
+                const barWidth = (model.score / 100) * 100;
+                
+                return `
+                    <div class="leaderboard-item ${model.isYou ? 'your-ai' : ''}" onclick="${model.isYou ? '' : `compareToModel('${model.name}')`}">
+                        <div class="leaderboard-rank">#${index + 1}</div>
+                        <div class="leaderboard-name">${model.name}${model.isYou ? ' 🎯' : ''}</div>
+                        <div class="leaderboard-bar-container">
+                            <div class="leaderboard-bar ${model.isYou ? 'your-ai' : ''}" style="width: ${barWidth}%"></div>
+                        </div>
+                        <div class="leaderboard-score">${model.score.toFixed(0)}</div>
+                        <div class="leaderboard-gap ${gapClass}">${model.isYou ? '' : gapText}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Update strengths and weaknesses
+        function updateStrengthsWeaknesses(strengths, weaknesses) {
+            const strengthsList = document.getElementById('strengthsList');
+            const weaknessesList = document.getElementById('weaknessesList');
+            
+            // If API data available, use it
+            if (strengths && strengths.length > 0) {
+                strengthsList.innerHTML = strengths.map(strength => `
+                    <div class="strength-item">
+                        <div class="strength-item-title">${strength}</div>
+                    </div>
+                `).join('');
+            } else {
+                // Placeholder based on current scores
+                const categories = currentData ? currentData.category_scores : {};
+                const categoryNames = {
+                    memory: 'Memory',
+                    response: 'Response Quality',
+                    learning: 'Learning Rate',
+                    knowledge: 'Knowledge',
+                    speed: 'Speed'
+                };
+                
+                const strengthItems = [];
+                const weaknessItems = [];
+                
+                Object.entries(categories).forEach(([key, score]) => {
+                    if (score >= 80) {
+                        strengthItems.push(`
+                            <div class="strength-item">
+                                <div class="strength-item-title">${categoryNames[key]}: ${score.toFixed(1)}/100</div>
+                                <div class="strength-item-description">Excellent performance</div>
+                            </div>
+                        `);
+                    } else if (score < 70) {
+                        weaknessItems.push(`
+                            <div class="weakness-item">
+                                <div class="weakness-item-title">${categoryNames[key]}: ${score.toFixed(1)}/100</div>
+                                <div class="weakness-item-description">Needs improvement</div>
+                            </div>
+                        `);
+                    }
+                });
+                
+                strengthsList.innerHTML = strengthItems.length > 0 
+                    ? strengthItems.join('') 
+                    : '<div class="strength-item"><div class="strength-item-title">Keep improving to unlock strengths!</div></div>';
+                
+                weaknessesList.innerHTML = weaknessItems.length > 0 
+                    ? weaknessItems.join('') 
+                    : '<div class="weakness-item"><div class="weakness-item-title">No significant weaknesses detected</div></div>';
+            }
+            
+            // If API weaknesses available
+            if (weaknesses && weaknesses.length > 0) {
+                weaknessesList.innerHTML = weaknesses.map(weakness => `
+                    <div class="weakness-item">
+                        <div class="weakness-item-title">${weakness}</div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // Update trend chart
+        function updateTrendChart(benchmarks) {
+            const ctx = document.getElementById('trendChart').getContext('2d');
+            
+            // Filter by date range
+            const now = new Date();
+            const filtered = benchmarks.filter(b => {
+                if (dateRange === 'all') return true;
+                const date = new Date(b.timestamp);
+                const daysAgo = (now - date) / (1000 * 60 * 60 * 24);
+                return daysAgo <= parseInt(dateRange);
+            });
+            
+            // Sort by date
+            filtered.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+            
+            // Extract data
+            const labels = filtered.map(b => {
+                const date = new Date(b.timestamp);
+                return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            });
+            
+            const overallScores = filtered.map(b => b.overall_score);
+            
+            if (trendChart) {
+                trendChart.destroy();
+            }
+            
+            trendChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Your Overall Score',
+                            data: overallScores,
+                            borderColor: '#4ade80',
+                            backgroundColor: 'rgba(74, 222, 128, 0.1)',
+                            borderWidth: 3,
+                            pointBackgroundColor: '#4ade80',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            pointRadius: 5,
+                            pointHoverRadius: 7,
+                            tension: 0.3,
+                            fill: true
+                        },
+                        {
+                            label: 'GPT-3.5-turbo Baseline',
+                            data: Array(labels.length).fill(82),
+                            borderColor: '#3b82f6',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            pointRadius: 0,
+                            tension: 0
+                        },
+                        {
+                            label: 'GPT-4 Baseline',
+                            data: Array(labels.length).fill(92),
+                            borderColor: '#8b5cf6',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            pointRadius: 0,
+                            tension: 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.05)'
+                            },
+                            ticks: {
+                                color: '#a0a0a0'
+                            }
+                        },
+                        y: {
+                            min: 0,
+                            max: 100,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.05)'
+                            },
+                            ticks: {
+                                color: '#a0a0a0',
+                                callback: value => value + '/100'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'bottom',
+                            labels: {
+                                color: '#e0e0e0',
+                                padding: 15,
+                                usePointStyle: true
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: '#fff',
+                            bodyColor: '#fff',
+                            borderColor: 'rgba(255, 255, 255, 0.1)',
+                            borderWidth: 1,
+                            padding: 12,
+                            displayColors: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // Set date range for trend chart
+        function setDateRange(range) {
+            dateRange = range;
+            
+            // Update button states
+            document.querySelectorAll('.range-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.range === range) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            // Reload trend chart
+            loadTrends();
+        }
+
+        // Compare to specific model
+        function compareToModel(modelName) {
+            alert(`Detailed comparison with ${modelName} coming in next part!`);
+            // TODO: Show detailed comparison modal
+        }
+
+        // Update score gauge chart
+        function updateScoreGauge(score) {
+            const scoreElement = document.getElementById('scoreValue');
+            scoreElement.textContent = Math.round(score);
+            
+            // Color coding
+            let color;
+            if (score < 60) {
+                color = '#ef4444';
+                scoreElement.className = 'gauge-score-value score-red';
+            } else if (score < 80) {
+                color = '#fbbf24';
+                scoreElement.className = 'gauge-score-value score-yellow';
+            } else {
+                color = '#4ade80';
+                scoreElement.className = 'gauge-score-value score-green';
+            }
+            
+            // Create or update gauge chart
+            const ctx = document.getElementById('scoreGauge').getContext('2d');
+            
+            if (scoreGaugeChart) {
+                scoreGaugeChart.destroy();
+            }
+            
+            scoreGaugeChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    datasets: [{
+                        data: [score, 100 - score],
+                        backgroundColor: [color, 'rgba(255, 255, 255, 0.05)'],
+                        borderWidth: 0,
+                        circumference: 270,
+                        rotation: 225
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    cutout: '80%',
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            enabled: false
+                        }
+                    }
+                }
+            });
+        }
+
+        // Update rank badge
+        function updateRankBadge(rank) {
+            document.getElementById('rankBadge').textContent = `Rank #${rank} of 7`;
+        }
+
+        // Update last benchmark timestamp
+        function updateLastBenchmark(timestamp) {
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+            const diffMins = Math.floor(diffMs / (1000 * 60));
+            
+            let timeAgo;
+            if (diffHours > 24) {
+                const diffDays = Math.floor(diffHours / 24);
+                timeAgo = `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+            } else if (diffHours > 0) {
+                timeAgo = `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+            } else {
+                timeAgo = `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
+            }
+            
+            document.getElementById('lastBenchmark').textContent = timeAgo;
+        }
+
+        // Update category cards
+        function updateCategoryCards(categoryScores, vsPrevious = null) {
+            const categories = ['memory', 'response', 'learning', 'speed'];
+            
+            categories.forEach(category => {
+                const score = categoryScores[category] || 0;
+                const scoreElement = document.getElementById(`${category}Score`);
+                const trendElement = document.getElementById(`${category}Trend`);
+                
+                // Update score
+                scoreElement.textContent = Math.round(score);
+                
+                // Color code score
+                if (score < 60) {
+                    scoreElement.className = 'stat-card-value score-red';
+                } else if (score < 80) {
+                    scoreElement.className = 'stat-card-value score-yellow';
+                } else {
+                    scoreElement.className = 'stat-card-value score-green';
+                }
+                
+                // Update trend (placeholder for now)
+                const trendValue = vsPrevious || 0;
+                let trendIcon, trendClass;
+                
+                if (trendValue > 0.5) {
+                    trendIcon = '↑';
+                    trendClass = 'trend-up';
+                } else if (trendValue < -0.5) {
+                    trendIcon = '↓';
+                    trendClass = 'trend-down';
+                } else {
+                    trendIcon = '→';
+                    trendClass = 'trend-stable';
+                }
+                
+                trendElement.className = `trend ${trendClass}`;
+                trendElement.innerHTML = `<span>${trendIcon}</span><span>${Math.abs(trendValue).toFixed(1)}</span>`;
+            });
+        }
+
+        // Update radar chart
+        async function updateRadarChart(categoryScores) {
+            const ctx = document.getElementById('radarChart').getContext('2d');
+            
+            // Get industry averages
+            let industryAverages = {
+                memory: 75,
+                response: 80,
+                learning: 78,
+                knowledge: 82,
+                speed: 76
+            };
+            
+            // Try to fetch industry data
+            try {
+                const response = await fetch(`${API_BASE}/compare/industry`);
+                if (response.ok) {
+                    const data = await response.json();
+                    // Calculate industry averages from comparisons
+                    // For now, use placeholder values
+                }
+            } catch (error) {
+                console.log('Could not fetch industry averages, using defaults');
+            }
+            
+            if (radarChart) {
+                radarChart.destroy();
+            }
+            
+            radarChart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['Memory', 'Response', 'Learning', 'Knowledge', 'Speed'],
+                    datasets: [
+                        {
+                            label: 'Your AI',
+                            data: [
+                                categoryScores.memory || 0,
+                                categoryScores.response || 0,
+                                categoryScores.learning || 0,
+                                categoryScores.knowledge || 0,
+                                categoryScores.speed || 0
+                            ],
+                            backgroundColor: 'rgba(74, 222, 128, 0.2)',
+                            borderColor: '#4ade80',
+                            borderWidth: 2,
+                            pointBackgroundColor: '#4ade80',
+                            pointBorderColor: '#fff',
+                            pointHoverBackgroundColor: '#fff',
+                            pointHoverBorderColor: '#4ade80'
+                        },
+                        {
+                            label: 'Industry Average',
+                            data: [
+                                industryAverages.memory,
+                                industryAverages.response,
+                                industryAverages.learning,
+                                industryAverages.knowledge,
+                                industryAverages.speed
+                            ],
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            borderColor: '#3b82f6',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            pointBackgroundColor: '#3b82f6',
+                            pointBorderColor: '#fff',
+                            pointHoverBackgroundColor: '#fff',
+                            pointHoverBorderColor: '#3b82f6'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    scales: {
+                        r: {
+                            angleLines: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            pointLabels: {
+                                color: '#e0e0e0',
+                                font: {
+                                    size: 14
+                                }
+                            },
+                            ticks: {
+                                color: '#a0a0a0',
+                                backdropColor: 'transparent',
+                                min: 0,
+                                max: 100,
+                                stepSize: 20
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'bottom',
+                            labels: {
+                                color: '#e0e0e0',
+                                padding: 20,
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: '#fff',
+                            bodyColor: '#fff',
+                            borderColor: 'rgba(255, 255, 255, 0.1)',
+                            borderWidth: 1,
+                            padding: 12,
+                            displayColors: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // Show error message
+        function showError(message) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('error').style.display = 'block';
+            document.getElementById('error-message').textContent = message;
+        }
+
+        // Button handlers
+        function runBenchmark() {
+            document.getElementById('runBenchmarkModal').style.display = 'block';
+        }
+
+        function viewHistory() {
+            // Scroll to trends section
+            document.getElementById('trends-section').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function viewCategory(category) {
+            alert(`Detailed view for ${category} coming soon!`);
+            // TODO: Open detailed category view
+        }
+
+        // Load detailed metrics
+        async function loadMetrics() {
+            try {
+                // Generate sample metrics based on current data
+                const categories = currentData ? currentData.category_scores : {};
+                updateMetricsTable(categories);
+            } catch (error) {
+                console.error('Error loading metrics:', error);
+            }
+        }
+
+        // Update metrics table
+        function updateMetricsTable(categoryScores) {
+            const metricsTable = document.getElementById('metricsTable');
+            
+            const categoryTests = {
+                memory: ['Short-term Recall', 'Long-term Retention', 'Context Switching', 'Memory Capacity'],
+                response: ['Answer Quality', 'Relevance', 'Clarity', 'Helpfulness'],
+                learning: ['Adaptation Rate', 'Knowledge Integration', 'Pattern Recognition', 'Error Correction'],
+                knowledge: ['Factual Accuracy', 'Domain Coverage', 'Reasoning Depth', 'Information Synthesis'],
+                speed: ['Response Time', 'Processing Speed', 'Parallel Tasks', 'Efficiency']
+            };
+            
+            const categoryIcons = {
+                memory: '🧠',
+                response: '💬',
+                learning: '📚',
+                knowledge: '🎓',
+                speed: '⚡'
+            };
+            
+            let html = '';
+            
+            Object.entries(categoryTests).forEach(([category, tests]) => {
+                const categoryScore = categoryScores[category] || 0;
+                const categoryName = category.charAt(0).toUpperCase() + category.slice(1);
+                
+                html += `
+                    <div class="metrics-category">
+                        <div class="metrics-category-header" onclick="toggleMetricsCategory('${category}')">
+                            <span>${categoryIcons[category]} ${categoryName}</span>
+                            <span style="margin-left: auto;">${categoryScore.toFixed(1)}/100</span>
+                            <span style="margin-left: 0.5rem;">▼</span>
+                        </div>
+                        <div class="metrics-category-content" id="metrics-${category}">
+                            <div class="metrics-table-grid">
+                                <div class="metrics-table-header">Test Name</div>
+                                <div class="metrics-table-header">Score</div>
+                                <div class="metrics-table-header">Status</div>
+                                <div class="metrics-table-header">Industry Avg</div>
+                                <div class="metrics-table-header">Gap</div>
+                `;
+                
+                tests.forEach(test => {
+                    const score = categoryScore + (Math.random() * 10 - 5); // Simulate variance
+                    const industryAvg = 75 + (Math.random() * 10);
+                    const gap = score - industryAvg;
+                    const status = score >= 80 ? '✅' : score >= 60 ? '⚠️' : '❌';
+                    
+                    html += `
+                        <div class="metrics-table-row">
+                            <div class="metrics-table-cell">${test}</div>
+                            <div class="metrics-table-cell">${score.toFixed(1)}</div>
+                            <div class="metrics-table-cell"><span class="status-icon">${status}</span></div>
+                            <div class="metrics-table-cell">${industryAvg.toFixed(1)}</div>
+                            <div class="metrics-table-cell" style="color: ${gap >= 0 ? '#4ade80' : '#ef4444'}">
+                                ${gap >= 0 ? '+' : ''}${gap.toFixed(1)}
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += `
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            metricsTable.innerHTML = html;
+        }
+
+        // Toggle metrics category
+        function toggleMetricsCategory(category) {
+            const content = document.getElementById(`metrics-${category}`);
+            content.classList.toggle('expanded');
+        }
+
+        // Filter metrics
+        function filterMetrics() {
+            const filter = document.getElementById('statusFilter').value;
+            // TODO: Implement filtering logic
+            console.log('Filter by:', filter);
+        }
+
+        // Export metrics as CSV
+        function exportMetricsCSV() {
+            alert('CSV export coming soon!');
+            // TODO: Implement CSV export
+        }
+
+        // Load improvement suggestions
+        async function loadSuggestions() {
+            try {
+                // Generate sample suggestions
+                const suggestions = [
+                    {
+                        priority: 'high',
+                        title: 'Enhance Memory Retention System',
+                        impact: '+8 points',
+                        difficulty: 'Medium',
+                        description: 'Implement advanced ChromaDB indexing and retrieval strategies to improve long-term memory recall.',
+                        link: '#phase-2'
+                    },
+                    {
+                        priority: 'medium',
+                        title: 'Optimize Response Generation',
+                        impact: '+5 points',
+                        difficulty: 'Easy',
+                        description: 'Fine-tune prompt templates and context window management for more relevant responses.',
+                        link: '#phase-1'
+                    },
+                    {
+                        priority: 'medium',
+                        title: 'Improve Learning Rate',
+                        impact: '+6 points',
+                        difficulty: 'Hard',
+                        description: 'Implement reinforcement learning from user feedback and interaction patterns.',
+                        link: '#phase-3'
+                    },
+                    {
+                        priority: 'low',
+                        title: 'Speed Optimization',
+                        impact: '+3 points',
+                        difficulty: 'Easy',
+                        description: 'Implement response caching and parallel processing for common queries.',
+                        link: '#optimization'
+                    }
+                ];
+                
+                updateSuggestions(suggestions);
+            } catch (error) {
+                console.error('Error loading suggestions:', error);
+            }
+        }
+
+        // Update suggestions display
+        function updateSuggestions(suggestions) {
+            const suggestionsList = document.getElementById('suggestionsList');
+            
+            suggestionsList.innerHTML = suggestions.map(suggestion => `
+                <div class="suggestion-card">
+                    <div class="suggestion-priority priority-${suggestion.priority}">
+                        ${suggestion.priority} Priority
+                    </div>
+                    <div class="suggestion-title">${suggestion.title}</div>
+                    <div class="suggestion-impact">
+                        <div class="suggestion-impact-item">
+                            <span>Impact:</span>
+                            <span class="suggestion-impact-value">${suggestion.impact}</span>
+                        </div>
+                        <div class="suggestion-impact-item">
+                            <span>Difficulty:</span>
+                            <span>${suggestion.difficulty}</span>
+                        </div>
+                    </div>
+                    <div class="suggestion-description">${suggestion.description}</div>
+                    <a href="${suggestion.link}" class="suggestion-link">View Documentation →</a>
+                </div>
+            `).join('');
+        }
+
+        // Load milestones
+        async function loadMilestones() {
+            try {
+                const response = await fetch(`${API_BASE}/milestones`);
+                if (response.ok) {
+                    const data = await response.json();
+                    updateMilestones(data.milestones || []);
+                } else {
+                    // No milestones yet
+                    updateMilestones([]);
+                }
+            } catch (error) {
+                console.warn('Error loading milestones:', error);
+                updateMilestones([]);
+            }
+        }
+
+        // Update milestones display
+        function updateMilestones(milestones) {
+            const timeline = document.getElementById('milestonesTimeline');
+            
+            if (milestones.length === 0) {
+                timeline.innerHTML = '<div style="text-align: center; color: #666; padding: 2rem;">No milestones yet. Keep improving to unlock achievements!</div>';
+                return;
+            }
+            
+            timeline.innerHTML = milestones.map(milestone => {
+                const date = new Date(milestone.date).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric'
+                });
+                
+                return `
+                    <div class="milestone-item">
+                        <div class="milestone-date">${date}</div>
+                        <div class="milestone-title">${milestone.description}</div>
+                        <div class="milestone-score">Score: ${milestone.score.toFixed(1)}/100</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Run benchmark modal functions
+        function closeRunBenchmarkModal() {
+            document.getElementById('runBenchmarkModal').style.display = 'none';
+            // Reset form
+            document.getElementById('categoryAll').checked = true;
+            document.querySelectorAll('.category-checkbox').forEach(cb => cb.checked = true);
+            document.getElementById('quickMode').checked = false;
+            document.getElementById('benchmarkProgress').style.display = 'none';
+        }
+
+        function toggleAllCategories() {
+            const allChecked = document.getElementById('categoryAll').checked;
+            document.querySelectorAll('.category-checkbox').forEach(cb => {
+                cb.checked = allChecked;
+            });
+        }
+
+        async function startBenchmark() {
+            const selectedCategories = [];
+            document.querySelectorAll('.category-checkbox:checked').forEach(cb => {
+                selectedCategories.push(cb.value);
+            });
+            
+            if (selectedCategories.length === 0) {
+                alert('Please select at least one category');
+                return;
+            }
+            
+            const quickMode = document.getElementById('quickMode').checked;
+            
+            // Show progress
+            document.getElementById('benchmarkProgress').style.display = 'block';
+            document.getElementById('startBenchmarkBtn').disabled = true;
+            
+            try {
+                const response = await fetch(`${API_BASE}/run`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        categories: selectedCategories,
+                        quick: quickMode,
+                        save_to_history: true
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`API returned ${response.status}`);
+                }
+                
+                const data = await response.json();
+                currentBenchmarkId = data.benchmark_id;
+                
+                // Start polling for status
+                pollBenchmarkStatus(data.benchmark_id);
+                
+            } catch (error) {
+                console.error('Error starting benchmark:', error);
+                alert('Failed to start benchmark: ' + error.message);
+                document.getElementById('benchmarkProgress').style.display = 'none';
+                document.getElementById('startBenchmarkBtn').disabled = false;
+            }
+        }
+
+        // Poll benchmark status
+        function pollBenchmarkStatus(benchmarkId) {
+            const interval = setInterval(async () => {
+                try {
+                    const response = await fetch(`${API_BASE}/status/${benchmarkId}`);
+                    if (!response.ok) {
+                        throw new Error('Status check failed');
+                    }
+                    
+                    const status = await response.json();
+                    
+                    // Update progress
+                    const progressFill = document.getElementById('progressFill');
+                    const progressText = document.getElementById('progressText');
+                    const progressStatus = document.getElementById('progressStatus');
+                    
+                    progressFill.style.width = status.progress + '%';
+                    progressText.textContent = status.progress + '%';
+                    progressStatus.textContent = status.status === 'running' ? 'Running tests...' : status.status;
+                    
+                    // Check if complete
+                    if (status.status === 'completed') {
+                        clearInterval(interval);
+                        progressStatus.textContent = '✅ Benchmark completed!';
+                        
+                        // Wait a moment then close and refresh
+                        setTimeout(() => {
+                            closeRunBenchmarkModal();
+                            location.reload();
+                        }, 2000);
+                    } else if (status.status === 'failed') {
+                        clearInterval(interval);
+                        progressStatus.textContent = '❌ Benchmark failed: ' + status.error;
+                        document.getElementById('startBenchmarkBtn').disabled = false;
+                    }
+                    
+                } catch (error) {
+                    console.error('Error polling status:', error);
+                    clearInterval(interval);
+                    alert('Lost connection to benchmark. Please refresh the page.');
+                }
+            }, 2000); // Poll every 2 seconds
+        }
+
+        // Comparison modal functions
+        function closeComparisonModal() {
+            document.getElementById('comparisonModal').style.display = 'none';
+        }
+
+        function compareToModel(modelName) {
+            document.getElementById('comparisonModelName').textContent = modelName;
+            document.getElementById('comparisonModal').style.display = 'block';
+            
+            // Get model baseline
+            const modelBaselines = {
+                'GPT-4': 92,
+                'Claude-3-Opus': 91,
+                'Claude-3-Sonnet': 86,
+                'Gemini-Pro': 84,
+                'GPT-3.5-turbo': 82,
+                'Llama-3.1-70b': 78
+            };
+            
+            const modelScore = modelBaselines[modelName] || 80;
+            const yourScore = currentData ? currentData.overall_score : 0;
+            const yourCategories = currentData ? currentData.category_scores : {};
+            
+            // Create comparison radar chart
+            const ctx = document.getElementById('comparisonRadar').getContext('2d');
+            
+            if (comparisonRadarChart) {
+                comparisonRadarChart.destroy();
+            }
+            
+            // Simulate model category scores (baseline ± 5)
+            const modelCategories = {
+                memory: modelScore + (Math.random() * 10 - 5),
+                response: modelScore + (Math.random() * 10 - 5),
+                learning: modelScore + (Math.random() * 10 - 5),
+                knowledge: modelScore + (Math.random() * 10 - 5),
+                speed: modelScore + (Math.random() * 10 - 5)
+            };
+            
+            comparisonRadarChart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['Memory', 'Response', 'Learning', 'Knowledge', 'Speed'],
+                    datasets: [
+                        {
+                            label: 'Your AI',
+                            data: [
+                                yourCategories.memory || 0,
+                                yourCategories.response || 0,
+                                yourCategories.learning || 0,
+                                yourCategories.knowledge || 0,
+                                yourCategories.speed || 0
+                            ],
+                            backgroundColor: 'rgba(74, 222, 128, 0.2)',
+                            borderColor: '#4ade80',
+                            borderWidth: 2
+                        },
+                        {
+                            label: modelName,
+                            data: [
+                                modelCategories.memory,
+                                modelCategories.response,
+                                modelCategories.learning,
+                                modelCategories.knowledge,
+                                modelCategories.speed
+                            ],
+                            backgroundColor: 'rgba(139, 92, 246, 0.2)',
+                            borderColor: '#8b5cf6',
+                            borderWidth: 2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        r: {
+                            min: 0,
+                            max: 100,
+                            ticks: { color: '#a0a0a0' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            pointLabels: { color: '#e0e0e0' }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: { color: '#e0e0e0' }
+                        }
+                    }
+                }
+            });
+            
+            // Update comparison details
+            const betterList = document.getElementById('comparisonBetter');
+            const worseList = document.getElementById('comparisonWorse');
+            
+            const better = [];
+            const worse = [];
+            
+            Object.entries(yourCategories).forEach(([category, score]) => {
+                const modelCategoryScore = modelCategories[category];
+                const categoryName = category.charAt(0).toUpperCase() + category.slice(1);
+                
+                if (score > modelCategoryScore) {
+                    better.push(`<div class="comparison-item">${categoryName}: +${(score - modelCategoryScore).toFixed(1)} points</div>`);
+                } else if (score < modelCategoryScore) {
+                    worse.push(`<div class="comparison-item">${categoryName}: ${(score - modelCategoryScore).toFixed(1)} points</div>`);
+                }
+            });
+            
+            betterList.innerHTML = better.length > 0 ? better.join('') : '<div class="comparison-item">No categories ahead yet</div>';
+            worseList.innerHTML = worse.length > 0 ? worse.join('') : '<div class="comparison-item">You\'re ahead in all categories! 🎉</div>';
+        }
+
+        // Export functions
+        function exportReport() {
+            alert('PDF export coming soon! This will generate a comprehensive benchmark report.');
+        }
+
+        function exportData() {
+            const data = {
+                currentData: currentData,
+                timestamp: new Date().toISOString()
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `benchmark-data-${Date.now()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
