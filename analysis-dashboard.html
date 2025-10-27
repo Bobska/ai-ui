@@ -1117,7 +1117,18 @@
         function updateImprovementsTable() {
             const tbody = document.getElementById('improvementsTableBody');
             
-            const applied = allData.history.filter(r => r.applied);
+            // Filter applied suggestions and deduplicate by suggestion_id (keep most recent)
+            const appliedMap = new Map();
+            allData.history
+                .filter(r => r.applied)
+                .forEach(record => {
+                    const existing = appliedMap.get(record.suggestion_id);
+                    if (!existing || new Date(record.timestamp) > new Date(existing.timestamp)) {
+                        appliedMap.set(record.suggestion_id, record);
+                    }
+                });
+            
+            const applied = Array.from(appliedMap.values());
             
             if (applied.length === 0) {
                 tbody.innerHTML = `
@@ -1136,7 +1147,12 @@
 
             tbody.innerHTML = applied.map(record => {
                 const date = new Date(record.timestamp).toLocaleDateString();
-                const score = record.improvement_score || 0;
+                
+                // Handle improvement_score properly - check for null/undefined vs 0
+                const hasScore = record.improvement_score !== null && record.improvement_score !== undefined;
+                const score = hasScore ? record.improvement_score : 0;
+                const scoreDisplay = hasScore ? score.toFixed(1) : 'N/A';
+                
                 const statusClass = score > 50 ? 'success' : score < 50 ? 'danger' : 'warning';
                 const statusText = record.success ? 'Success' : record.success === false ? 'Regression' : 'Unknown';
                 
@@ -1148,7 +1164,7 @@
                         <td><span class="badge ${record.issue.priority.toLowerCase()}">${record.issue.priority}</span></td>
                         <td>${formatMetric(record.before_metrics)}</td>
                         <td>${formatMetric(record.after_metrics)}</td>
-                        <td><strong>${score.toFixed(1)}</strong></td>
+                        <td><strong>${scoreDisplay}</strong></td>
                         <td><span class="badge ${statusClass}">${statusText}</span></td>
                     </tr>
                 `;
