@@ -2331,12 +2331,30 @@
         }
 
         // Run benchmark modal functions
-        function closeRunBenchmarkModal() {
-            // Cancel any ongoing benchmark polling
+        async function closeRunBenchmarkModal() {
+            // Cancel any ongoing benchmark on the server
+            if (currentBenchmarkId && benchmarkPollInterval) {
+                try {
+                    const response = await fetch(`${API_BASE}/benchmark/cancel/${currentBenchmarkId}`, {
+                        method: 'POST'
+                    });
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        console.log('Benchmark cancelled:', data.message);
+                    }
+                } catch (error) {
+                    console.warn('Failed to cancel benchmark on server:', error);
+                }
+            }
+            
+            // Stop polling
             if (benchmarkPollInterval) {
                 clearInterval(benchmarkPollInterval);
                 benchmarkPollInterval = null;
             }
+            
+            currentBenchmarkId = null;
             
             document.getElementById('runBenchmarkModal').style.display = 'none';
             
@@ -2477,6 +2495,13 @@
                             closeRunBenchmarkModal();
                             location.reload();
                         }, 2000);
+                    } else if (status.status === 'cancelled') {
+                        clearInterval(benchmarkPollInterval);
+                        benchmarkPollInterval = null;
+                        progressStatus.textContent = '🛑 Benchmark cancelled by user';
+                        document.getElementById('startBenchmarkBtn').disabled = false;
+                        document.getElementById('startBenchmarkBtn').style.display = 'inline-flex';
+                        document.getElementById('cancelBenchmarkBtn').style.display = 'none';
                     } else if (status.status === 'failed' || status.status === 'error') {
                         clearInterval(benchmarkPollInterval);
                         benchmarkPollInterval = null;
